@@ -1,37 +1,35 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import AlertBottomLeft from "../components/AlertBottomLeft";
-import loginImage from "../assets/bg_login.jpg"; // adapte le chemin selon ton arborescence
+import loginImage from "../assets/bg_login.jpg";
 
 function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [motDePasse, setMotDePasse] = useState("");
-  const [error, setError] = useState("");
+  const [errorMessage, setErrorMessage] = useState(""); // Renommé pour éviter toute confusion avec 'error' axios
   const [loading, setLoading] = useState(false);
   const URL = import.meta.env.VITE_URL_API;
+ 
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
-
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => {
-        setError("");
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email.trim() || !motDePasse.trim()) {
-      setError("Veuillez remplir tous les champs.");
+      setErrorMessage("Veuillez remplir tous les champs.");
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 3000);
       return;
     }
 
     if (!isValidEmail(email)) {
-      setError("Adresse email invalide.");
+      setErrorMessage("Adresse email invalide.");
+      setTimeout(() => {
+        setErrorMessage(null);
+      }, 3000);
       return;
     }
 
@@ -59,14 +57,25 @@ function Login() {
         }
         navigate("/");
       } else {
-        setError(data.message || "Identifiants invalides.");
+        setErrorMessage(data.message || "Identifiants invalides.");
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 3000);
       }
     } catch (err) {
       if (err.response?.data?.message) {
-        setError(err.response.data.message);
+        setErrorMessage(err.response.data.message);
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 3000);
       } else {
-        setError("Erreur lors de la connexion. Veuillez réessayer.");
+
+        setErrorMessage("Erreur lors de la connexion. Veuillez réessayer.");
+        setTimeout(() => {
+          setErrorMessage(null);
+        }, 3000);
       }
+
     } finally {
       setLoading(false);
     }
@@ -91,7 +100,7 @@ function Login() {
                 autoComplete="email"
                 required
                 className="peer w-full px-3 pt-6 pb-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                placeholder=" " // Nécessaire pour que le label flotte
+                placeholder=" "
               />
               <label
                 htmlFor="email"
@@ -146,7 +155,13 @@ function Login() {
       </div>
 
       {/* Alerte affichée en bas à gauche */}
-      {error && <AlertBottomLeft message={error} type="error" />}
+      {errorMessage && (
+        <AlertBottomLeft
+          message={errorMessage}
+          type="error"
+          duration={4000}
+        />
+      )}
     </div>
   );
 }

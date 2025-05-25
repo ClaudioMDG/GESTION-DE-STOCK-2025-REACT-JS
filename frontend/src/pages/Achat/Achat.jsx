@@ -24,12 +24,13 @@ function Achat() {
   const itemsPerPage = 5;
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc");
-
+  const URL = import.meta.env.VITE_URL_API;
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success"); // success | error | info | warning
+  
   const fetchAchats = async () => {
     try {
-      const response = await fetch("http://localhost:9000/api/achats");
+      const response = await fetch(`${URL}/api/achats`);
       if (!response.ok) throw new Error("Erreur lors du chargement des achats");
       setAchats(await response.json());
     } catch (error) {
@@ -39,7 +40,7 @@ function Achat() {
   useEffect(() => {
     const fetchFournisseurs = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/fournisseurs");
+        const response = await fetch(`${URL}/api/fournisseurs`);
         if (!response.ok)
           throw new Error("Erreur lors du chargement des fournisseurs");
         setFournisseurs(await response.json());
@@ -60,7 +61,7 @@ function Achat() {
   const handleDetailsClick = async (achatId) => {
     try {
       const response = await fetch(
-        `http://localhost:9000/api/achats/${achatId}/details`
+        `${URL}/api/achats/${achatId}/details`
       );
       if (!response.ok)
         throw new Error(
@@ -132,7 +133,7 @@ function Achat() {
     if (window.confirm("Supprimer cet achat ?")) {
       try {
         await axios.delete(
-          `http://localhost:9000/api/achats/delete/${achatId}`
+          `${URL}/api/achats/delete/${achatId}`
         );
         setAchats((prev) => prev.filter((a) => a.id !== achatId));
         setAlertMessage("Suppression réussie !");

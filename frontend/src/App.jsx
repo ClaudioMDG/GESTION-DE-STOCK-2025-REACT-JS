@@ -42,29 +42,23 @@ function App() {
         <Route path="/ClientList" element={<ProtectedRoute><ClientList /></ProtectedRoute>} />
        
 
-        <Route path="/FournisseurAdd" element={<ProtectedRoute><FournisseurAdd /></ProtectedRoute>} />
+      
         <Route path="/FournisseurList" element={<ProtectedRoute><FournisseurList /></ProtectedRoute>} />
-        <Route path="/FournisseurUpdate/:id" element={<ProtectedRoute><FournisseurUpdate /></ProtectedRoute>} />
+       
 
-        <Route path="/CategorieAdd" element={<ProtectedRoute><CategorieAdd /></ProtectedRoute>} />
+        
         <Route path="/CategorieList" element={<ProtectedRoute><CategorieList /></ProtectedRoute>} />
         {/* <Route path="/CategorieUpdate/:id" element={<CategorieUpdate />} /> */}
 
-        <Route path="/ProduitAdd" element={<ProtectedRoute><ProduitAdd /></ProtectedRoute>} />
+       
         <Route path="/ProduitList" element={<ProtectedRoute><ProduitList /></ProtectedRoute>} />
-        <Route path="/ProduitUpdate/:id" element={<ProtectedRoute><ProduitUpdate /></ProtectedRoute>} />
-
-        <Route path="/UserAdd" element={<ProtectedRoute><UserAdd /></ProtectedRoute>} />
+        
+       
         <Route path="/UserList" element={<ProtectedRoute><UserList /></ProtectedRoute>} />
-        <Route path="/UserUpdate/:id" element={<ProtectedRoute><UserUpdate /></ProtectedRoute>} />
-
-        <Route path="/venteAdd" element={<ProtectedRoute><VenteAdd /></ProtectedRoute>} />
-        <Route path="/venteList" element={<ProtectedRoute><VenteList /></ProtectedRoute>} />
-        <Route path="/venteDetail" element={<ProtectedRoute><VenteDetail /></ProtectedRoute>} />
+               
+       <Route path="/venteDetail" element={<ProtectedRoute><VenteDetail /></ProtectedRoute>} />
         <Route path="/vente" element={<ProtectedRoute><Vente /></ProtectedRoute>} />
 
-        <Route path="/AchatAdd" element={<ProtectedRoute><AchatAdd /></ProtectedRoute>} />
-        <Route path="/AchatList" element={<ProtectedRoute><AchatList /></ProtectedRoute>} />
         <Route path="/Achat" element={<ProtectedRoute><Achat /></ProtectedRoute>} />
       </Routes>
     </BrowserRouter>

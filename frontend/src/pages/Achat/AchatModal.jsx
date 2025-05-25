@@ -93,7 +93,7 @@ function AchatModal({ isOpen, onClose, onAchatAdded }) {
       })),
     };
 
-    axios.post("http://localhost:9000/api/achats", achatData)
+    axios.post(`${URL}/api/achats`, achatData)
       .then(() => {
         setSuccess("Achat ajouté avec succès !");
         setTimeout(() => {

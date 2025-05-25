@@ -10,7 +10,7 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
   const [filteredProduits, setFilteredProduits] = useState([]);
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [total, setTotal] = useState(0);
-
+  const URL = import.meta.env.VITE_URL_API;
   // Alert state (centralisé)
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success");
@@ -27,7 +27,7 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
   useEffect(() => {
     if (isOpen) {
       axios
-        .get("http://localhost:9000/api/fournisseurs")
+        .get(`${URL}/api/fournisseurs`)
         .then((res) => setFournisseurs(res.data))
         .catch((err) => {
           setAlertMessage("Erreur chargement fournisseurs : " + err.message);
@@ -35,7 +35,7 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
         });
 
       axios
-        .get("http://localhost:9000/api/produits")
+        .get(`${URL}/api/produits`)
         .then((res) => {
           setProduits(res.data);
           setFilteredProduits(res.data);
@@ -115,7 +115,7 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
     };
 
     axios
-      .post("http://localhost:9000/api/achats", achatData)
+      .post(`${URL}/api/achats`, achatData)
       .then(() => {
         setAlertMessage("Achat ajouté avec succès !");
         setAlertType("success");
