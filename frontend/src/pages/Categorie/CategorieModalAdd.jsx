@@ -5,7 +5,7 @@ function CategorieModalAdd({ isOpen, onClose, onSuccess }) {
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState(null);
-
+  const URL = import.meta.env.VITE_URL_API;
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -17,7 +17,7 @@ function CategorieModalAdd({ isOpen, onClose, onSuccess }) {
     const category = { nom, description };
 
     try {
-      const response = await axios.post('http://localhost:9000/api/categories', category);
+      const response = await axios.post(`${URL}/api/categories`, category);
 
       setNom('');
       setDescription('');

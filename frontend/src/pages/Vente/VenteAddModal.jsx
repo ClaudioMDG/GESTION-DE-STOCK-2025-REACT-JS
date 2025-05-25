@@ -11,7 +11,7 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-
+  const URL = import.meta.env.VITE_URL_API;
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
   const totalPages = Math.ceil(filteredProduits.length / itemsPerPage);
@@ -19,14 +19,14 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
 
   useEffect(() => {
     if (isOpen) {
-      axios.get('http://localhost:9000/api/produits')
+      axios.get(`${URL}/api/produits`)
         .then(response => {
           setProduits(response.data);
           setFilteredProduits(response.data);
         })
         .catch(error => setError('Erreur produits : ' + error.message));
 
-      axios.get('http://localhost:9000/api/clients')
+      axios.get(`${URL}/api/clients`)
         .then(response => setClients(response.data))
         .catch(error => setError('Erreur clients : ' + error.message));
     }
@@ -82,7 +82,7 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
       }))
     };
 
-    axios.post('http://localhost:9000/api/ventes', venteData)
+    axios.post(`${URL}/api/ventes`, venteData)
       .then(() => {
         setSuccessMessage('Vente réussie !');
         setSelectedClient('');

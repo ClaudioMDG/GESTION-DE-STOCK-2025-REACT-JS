@@ -12,7 +12,7 @@ function FournisseurAddModal({ isOpen, onClose, onFournisseurAdded }) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState({ message: "", type: "" });
-
+  const URL = import.meta.env.VITE_URL_API;
   const showAlert = (message, type = "error") => {
     setAlert({ message, type });
     setTimeout(() => {
@@ -34,7 +34,7 @@ function FournisseurAddModal({ isOpen, onClose, onFournisseurAdded }) {
 
     try {
       const response = await axios.post(
-        "http://localhost:9000/api/fournisseurs",
+        `${URL}/api/fournisseurs`,
         formData
       );
 

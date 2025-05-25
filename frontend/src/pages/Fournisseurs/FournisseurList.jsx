@@ -26,7 +26,7 @@ function FournisseurList() {
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const fournisseursParPage = 10;
-
+  const URL = import.meta.env.VITE_URL_API;
   const indexOfLast = currentPage * fournisseursParPage;
   const indexOfFirst = indexOfLast - fournisseursParPage;
   const currentFournisseurs = filteredFournisseurs.slice(
@@ -43,7 +43,7 @@ function FournisseurList() {
   }, [fournisseurs, search, sortColumn, sortAsc]);
 
   const fetchData = () => {
-    axios.get("http://localhost:9000/api/fournisseurs").then((res) => {
+    axios.get(`${URL}/api/fournisseurs`).then((res) => {
       setFournisseurs(res.data);
     });
   };
@@ -72,7 +72,7 @@ function FournisseurList() {
   };
 
   const handleDelete = (id) => {
-    axios.delete(`http://localhost:9000/api/fournisseurs/${id}`).then(() => {
+    axios.delete(`${URL}/api/fournisseurs/${id}`).then(() => {
       setFournisseurs(fournisseurs.filter((f) => f.id !== id));
       setAlert({
         message: "Fournisseur supprimé avec succès !",

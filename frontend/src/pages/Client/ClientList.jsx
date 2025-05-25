@@ -26,7 +26,7 @@ function ClientList() {
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const clientsParPage = 10;
-
+  const URL = import.meta.env.VITE_URL_API;
   const indexOfLast = currentPage * clientsParPage;
   const indexOfFirst = indexOfLast - clientsParPage;
   const currentClients = filteredClients.slice(indexOfFirst, indexOfLast);
@@ -41,7 +41,7 @@ function ClientList() {
 
   const fetchData = async () => {
     try {
-      const res = await axios.get("http://localhost:9000/api/clients");
+      const res = await axios.get(`${URL}/api/clients`);
       setClients(res.data);
     } catch (err) {
       setAlert({
@@ -92,7 +92,7 @@ function ClientList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Confirmer la suppression de ce client ?")) return;
     try {
-      await axios.delete(`http://localhost:9000/api/clients/${id}`);
+      await axios.delete(`${URL}/api/clients/${id}`);
       setClients((prev) => prev.filter((c) => c.id !== id));
       setAlert({ message: "Client supprimé avec succès !", type: "success" });
 

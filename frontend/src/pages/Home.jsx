@@ -4,9 +4,9 @@ import Sidebar from './Layouts/Sidebar';
 function Home() {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState(null);
-
+  const URL = import.meta.env.VITE_URL_API;
   useEffect(() => {
-    fetch('http://localhost:9000/api/stats')
+    fetch(`${URL}/api/stats`)
       .then(res => {
         if (!res.ok) throw new Error('Erreur de chargement des statistiques');
         return res.json();

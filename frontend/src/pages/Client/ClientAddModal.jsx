@@ -24,7 +24,7 @@ function ClientAddModal({ isOpen, onClose, onClientAdded, handleAddSuccess }) {
 
     try {
       const response = await axios.post(
-        "http://localhost:9000/api/clients",
+        `${URL}/api/clients`,
         formData
       );
 

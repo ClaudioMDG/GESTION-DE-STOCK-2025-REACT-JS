@@ -5,10 +5,11 @@ function VenteDetail() {
   const { venteId } = useParams(); // Récupère l'id de la vente depuis l'URL
   const [vente, setVente] = useState(null);
   const [error, setError] = useState(null);
+  const URL = import.meta.env.VITE_URL_API;
 
   useEffect(() => {
     // Récupération des détails de la vente depuis l'API
-    fetch(`http://localhost:9000/api/ventes/${venteId}`)
+    fetch(`${URL}/api/ventes/${venteId}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Erreur lors du chargement des détails de la vente');

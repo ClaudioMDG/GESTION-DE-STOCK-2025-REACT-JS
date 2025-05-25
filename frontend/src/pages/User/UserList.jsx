@@ -1,24 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Edit, Trash2, Plus } from 'lucide-react';
-import Sidebar from '../Layouts/Sidebar';
-import { Link } from 'react-router-dom';
-import UserAddModal from './UserAddModal';
-import AlertBottomLeft from '../../components/AlertBottomLeft'; // Assure-toi du bon chemin
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Edit, Trash2, Plus } from "lucide-react";
+import Sidebar from "../Layouts/Sidebar";
+import { Link } from "react-router-dom";
+import UserAddModal from "./UserAddModal";
+import AlertBottomLeft from "../../components/AlertBottomLeft"; // Assure-toi du bon chemin
 
 function UserList() {
   const [utilisateurs, setUtilisateurs] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [alert, setAlert] = useState({ message: '', type: 'success' });
-
+  const [alert, setAlert] = useState({ message: "", type: "success" });
+  const URL = import.meta.env.VITE_URL_API;
   // Charger les utilisateurs
   const fetchUtilisateurs = async () => {
     try {
-      const response = await axios.get('http://localhost:9000/api/utilisateurs');
+      const response = await axios.get(`${URL}/api/utilisateurs`);
       setUtilisateurs(response.data);
     } catch (error) {
-      console.error('Erreur de chargement :', error);
-      setAlert({ message: 'Erreur lors du chargement des utilisateurs', type: 'error' });
+      console.error("Erreur de chargement :", error);
+      setAlert({
+        message: "Erreur lors du chargement des utilisateurs",
+        type: "error",
+      });
     }
   };
 
@@ -29,20 +32,23 @@ function UserList() {
   // Supprimer un utilisateur
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`http://localhost:9000/api/utilisateurs/${id}`);
+      await axios.delete(`${URL}/api/utilisateurs/${id}`);
       setUtilisateurs(utilisateurs.filter((u) => u.id !== id));
-      setAlert({ message: 'Utilisateur supprimé avec succès.', type: 'success' });
-    // Réinitialiser l'alerte après 3 secondes
-    setTimeout(() => {
-      setAlert(null);
-    }, 3000);
+      setAlert({
+        message: "Utilisateur supprimé avec succès.",
+        type: "success",
+      });
+      // Réinitialiser l'alerte après 3 secondes
+      setTimeout(() => {
+        setAlert(null);
+      }, 3000);
     } catch (error) {
-      console.error('Erreur lors de la suppression :', error);
-      setAlert({ message: 'Erreur lors de la suppression.', type: 'error' });
-    // Réinitialiser l'alerte après 3 secondes
-    setTimeout(() => {
-      setAlert(null);
-    }, 3000);
+      console.error("Erreur lors de la suppression :", error);
+      setAlert({ message: "Erreur lors de la suppression.", type: "error" });
+      // Réinitialiser l'alerte après 3 secondes
+      setTimeout(() => {
+        setAlert(null);
+      }, 3000);
     }
   };
 
@@ -69,18 +75,32 @@ function UserList() {
           <table className="min-w-full table-auto">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Nom</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Email</th>
-                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Rôle</th>
-                <th className="px-4 py-2 text-center text-sm font-medium text-gray-600">Actions</th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+                  Nom
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+                  Email
+                </th>
+                <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">
+                  Rôle
+                </th>
+                <th className="px-4 py-2 text-center text-sm font-medium text-gray-600">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {utilisateurs.map((utilisateur) => (
                 <tr key={utilisateur.id} className="border-b border-gray-200">
-                  <td className="px-4 py-2 text-sm font-medium text-gray-800">{utilisateur.nom}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{utilisateur.email}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{utilisateur.role}</td>
+                  <td className="px-4 py-2 text-sm font-medium text-gray-800">
+                    {utilisateur.nom}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {utilisateur.email}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-gray-600">
+                    {utilisateur.role}
+                  </td>
                   <td className="px-4 py-2 text-center">
                     <Link
                       to={`/UserUpdate/${utilisateur.id}`}
@@ -108,7 +128,10 @@ function UserList() {
           onSuccess={() => {
             fetchUtilisateurs();
             setIsModalOpen(false);
-            setAlert({ message: 'Utilisateur ajouté avec succès.', type: 'success' });
+            setAlert({
+              message: "Utilisateur ajouté avec succès.",
+              type: "success",
+            });
           }}
         />
 

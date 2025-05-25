@@ -28,7 +28,7 @@ function ProduitList() {
   const [sortAsc, setSortAsc] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const produitsParPage = 10;
-
+  const URL = import.meta.env.VITE_URL_API;
   const [categorieFiltre, setCategorieFiltre] = useState("");
   const [fournisseurFiltre, setFournisseurFiltre] = useState("");
   const [seuilFiltre, setSeuilFiltre] = useState(""); // "haut", "bas", ou ""
@@ -46,13 +46,13 @@ function ProduitList() {
     filtrerEtTrier();
   }, [produits, search, sortColumn, sortAsc, categorieFiltre, fournisseurFiltre, seuilFiltre]);
   const fetchData = () => {
-    axios.get("http://localhost:9000/api/produits").then((res) => {
+    axios.get(`${URL}/api/produits`).then((res) => {
       setProduits(res.data);
     });
-    axios.get("http://localhost:9000/api/categories").then((res) => {
+    axios.get(`${URL}/api/categories`).then((res) => {
       setCategories(res.data);
     });
-    axios.get("http://localhost:9000/api/fournisseurs").then((res) => {
+    axios.get(`${URL}/api/fournisseurs`).then((res) => {
       setFournisseurs(res.data);
     });
   };
@@ -96,7 +96,7 @@ function ProduitList() {
 
   const handleDelete = (id) => {
     axios
-      .delete(`http://localhost:9000/api/produits/${id}`)
+      .delete(`${URL}/api/produits/${id}`)
       .then(() => {
         setProduits(produits.filter((p) => p.id !== id));
         setAlert({ message: "Produit supprimé avec succès !", type: "success" });

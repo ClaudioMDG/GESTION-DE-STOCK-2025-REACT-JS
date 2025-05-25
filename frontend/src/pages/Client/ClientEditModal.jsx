@@ -12,7 +12,7 @@ function ClientEditModal({ isOpen, onClose, client, onSuccess }) {
   });
 
   const [alertMessage, setAlertMessage] = useState("");
-
+  const URL = import.meta.env.VITE_URL_API;
   useEffect(() => {
     if (client) {
       setFormData({
@@ -42,7 +42,7 @@ function ClientEditModal({ isOpen, onClose, client, onSuccess }) {
     }
 
     try {
-      await axios.put(`http://localhost:9000/api/clients/${client.id}`, formData);
+      await axios.put(`${URL}/clients/${client.id}`, formData);
       onSuccess(); // succès : recharge la liste + ferme modal
       onClose();
     } catch (err) {

@@ -25,7 +25,7 @@ function CategorieList() {
   const [currentPage, setCurrentPage] = useState(1);
   const [alert, setAlert] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false); // ✅ État du modal
-
+  const URL = import.meta.env.VITE_URL_API;
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -37,7 +37,7 @@ function CategorieList() {
   }, [categories, search, sortColumn, sortAsc]);
 
   const fetchCategories = () => {
-    axios.get("http://localhost:9000/api/categories").then((res) => {
+    axios.get(`${URL}/api/categories`).then((res) => {
       setCategories(res.data);
     });
   };
@@ -89,7 +89,7 @@ function CategorieList() {
   const handleDelete = async (id) => {
     if (!window.confirm("Confirmer la suppression de ce client ?")) return;
     try {
-      await axios.delete(`http://localhost:9000/api/categories/${id}`);
+      await axios.delete(`${URL}/api/categories/${id}`);
       setCategories((prev) => prev.filter((c) => c.id !== id));
       setAlert({
         message: "Categories supprimé avec succès !",

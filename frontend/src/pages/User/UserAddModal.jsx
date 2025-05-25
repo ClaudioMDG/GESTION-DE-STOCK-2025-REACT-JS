@@ -10,7 +10,7 @@ function UserAddModal({ isOpen, onClose, onSuccess }) {
   const [alertMessage, setAlertMessage] = useState('');
   const [alertType, setAlertType] = useState('success');
   const [loading, setLoading] = useState(false);
-
+  const URL = import.meta.env.VITE_URL_API;
   useEffect(() => {
     if (isOpen) {
       setNom('');
@@ -52,7 +52,7 @@ function UserAddModal({ isOpen, onClose, onSuccess }) {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:9000/api/utilisateurs', newUser);
+      const response = await axios.post(`${URL}/api/utilisateurs`, newUser);
 
       if (response.status === 201) {
         showAlert("Utilisateur ajouté avec succès !", 'success');

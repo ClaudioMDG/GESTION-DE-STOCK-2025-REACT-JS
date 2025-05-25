@@ -16,7 +16,7 @@ function Vente() {
   const [detailsProduits, setDetailsProduits] = useState([]);
   const navigate = useNavigate();
   const [showModal, setShowModal] = useState(false);
-
+  const URL = import.meta.env.VITE_URL_API;
   // Recherche & filtres
   const [searchClient, setSearchClient] = useState("");
   const [dateDebut, setDateDebut] = useState("");
@@ -34,7 +34,7 @@ function Vente() {
   useEffect(() => {
     const fetchVentes = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/ventes");
+        const response = await fetch(`${URL}/api/ventes`);
         if (!response.ok)
           throw new Error("Erreur lors du chargement des ventes");
         const data = await response.json();
@@ -46,7 +46,7 @@ function Vente() {
 
     const fetchClients = async () => {
       try {
-        const response = await fetch("http://localhost:9000/api/clients");
+        const response = await fetch(`${URL}/api/clients`);
         if (!response.ok)
           throw new Error("Erreur lors du chargement des clients");
         const data = await response.json();
@@ -68,7 +68,7 @@ function Vente() {
   const handleDetailsClick = async (venteId) => {
     try {
       const response = await fetch(
-        `http://localhost:9000/api/ventes/${venteId}/details`
+        `${URL}/api/ventes/${venteId}/details`
       );
       if (!response.ok)
         throw new Error(
@@ -161,7 +161,7 @@ function Vente() {
     if (window.confirm("Voulez-vous vraiment supprimer cette vente ?")) {
       try {
         await axios.delete(
-          `http://localhost:9000/api/ventes/delete/${venteId}`
+          `${URL}/api/ventes/delete/${venteId}`
         );
         setVentes((prev) => prev.filter((v) => v.id !== venteId));
         setMessage({

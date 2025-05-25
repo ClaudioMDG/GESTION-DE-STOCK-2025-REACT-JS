@@ -8,10 +8,10 @@ function UserUpdate() {
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-
+  const URL = import.meta.env.VITE_URL_API;
   // Charger les données de l'utilisateur
   useEffect(() => {
-    fetch(`http://localhost:9000/api/utilisateurs/${id}`)  // Ajuste l'URL de l'API si nécessaire
+    fetch(`${URL}/api/utilisateurs/${id}`)  // Ajuste l'URL de l'API si nécessaire
       .then((response) => response.json())
       .then((data) => {
         setNom(data.nom);
@@ -27,7 +27,7 @@ function UserUpdate() {
 
     const updatedUser = { nom, email, role };
 
-    fetch(`http://localhost:9000/api/utilisateurs/${id}`, {
+    fetch(`${URL}/api/utilisateurs/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

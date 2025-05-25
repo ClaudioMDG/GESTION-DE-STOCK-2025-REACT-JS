@@ -12,21 +12,21 @@ function AchatModal({ isOpen, onClose, onAchatAdded }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const URL = import.meta.env.VITE_URL_API;
   const [currentPage, setCurrentPage] = useState(1);
   const produitsPerPage = 5;
 
   useEffect(() => {
     if (!isOpen) return;
 
-    axios.get("http://localhost:9000/api/produits")
+    axios.get(`${URL}/api/produits`)
       .then((res) => {
         setProduits(res.data);
         setFilteredProduits(res.data);
       })
       .catch((err) => setError(err.message));
 
-    axios.get("http://localhost:9000/api/fournisseurs")
+    axios.get(`${URL}/api/fournisseurs`)
       .then((res) => setFournisseurs(res.data))
       .catch((err) => setError(err.message));
   }, [isOpen]);

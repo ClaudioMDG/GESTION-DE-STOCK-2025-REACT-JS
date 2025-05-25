@@ -26,7 +26,7 @@ function ProduitEditModal({ isOpen, onClose, produit, onSuccess }) {
   const [categories, setCategories] = useState([]);
   const [fournisseurs, setFournisseurs] = useState([]);
   const [produitsExistants, setProduitsExistants] = useState([]);
-
+  const URL = import.meta.env.VITE_URL_API;
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [image, setImage] = useState(null);
@@ -53,7 +53,7 @@ function ProduitEditModal({ isOpen, onClose, produit, onSuccess }) {
     setFournisseurId(produit.fournisseur_id || "");
 
     axios
-      .get("http://localhost:9000/api/categories")
+      .get(`${URL}/api/categories`)
       .then((res) => setCategories(res.data))
       .catch(() => {
         setMessage("Erreur chargement catégories");
@@ -61,7 +61,7 @@ function ProduitEditModal({ isOpen, onClose, produit, onSuccess }) {
       });
 
     axios
-      .get("http://localhost:9000/api/fournisseurs")
+      .get(`${URL}/api/fournisseurs`)
       .then((res) => setFournisseurs(res.data))
       .catch(() => {
         setMessage("Erreur chargement fournisseurs");
@@ -69,7 +69,7 @@ function ProduitEditModal({ isOpen, onClose, produit, onSuccess }) {
       });
 
     axios
-      .get("http://localhost:9000/api/produits")
+      .get(`${URL}/api/produits`)
       .then((res) => setProduitsExistants(res.data))
       .catch(() => {
         setMessage("Erreur chargement produits existants");
@@ -150,7 +150,7 @@ function ProduitEditModal({ isOpen, onClose, produit, onSuccess }) {
     };
 
     axios
-      .put(`http://localhost:9000/api/produits/${produit.id}`, data)
+      .put(`${URL}/api/produits/${produit.id}`, data)
       .then(() => {
         setMessage("Produit mis à jour avec succès !");
         setMessageType("success");

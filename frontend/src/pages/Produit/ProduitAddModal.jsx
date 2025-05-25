@@ -16,7 +16,7 @@ function ProduitAddModal({ isOpen, onClose, onSuccess }) {
   const [categories, setCategories] = useState([]);
   const [fournisseurs, setFournisseurs] = useState([]);
   const [produitsExistants, setProduitsExistants] = useState([]);
-
+  const URL = import.meta.env.VITE_URL_API;
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -26,15 +26,15 @@ function ProduitAddModal({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    axios.get('http://localhost:9000/api/categories')
+    axios.get(`${URL}/api/categories`)
       .then(res => setCategories(res.data))
       .catch(() => setMessage("Erreur chargement catégories"));
 
-    axios.get('http://localhost:9000/api/fournisseurs')
+    axios.get(`${URL}/api/fournisseurs`)
       .then(res => setFournisseurs(res.data))
       .catch(() => setMessage("Erreur chargement fournisseurs"));
 
-    axios.get('http://localhost:9000/api/produits')
+    axios.get(`${URL}/api/produits`)
       .then(res => setProduitsExistants(res.data))
       .catch(() => setMessage("Erreur chargement produits existants"));
   }, [isOpen]);
@@ -114,7 +114,7 @@ function ProduitAddModal({ isOpen, onClose, onSuccess }) {
       formData.append('image', imageFile);
     }
 
-    axios.post('http://localhost:9000/api/produits', formData, {
+    axios.post(`${URL}/api/produits`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

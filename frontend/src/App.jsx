@@ -9,33 +9,24 @@ import {
 } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
-import ClientAdd from "./pages/Client/ClientAdd";
 import ClientList from "./pages/Client/ClientList";
-import ClientUpdate from "./pages/Client/ClientUpdate";
 
-import FournisseurAdd from "./pages/Fournisseurs/FournisseurAdd";
+
 import FournisseurList from "./pages/Fournisseurs/FournisseurList";
-import FournisseurUpdate from "./pages/Fournisseurs/FournisseurUpdate";
 
-import CategorieAdd from "./pages/Categorie/CategorieAdd";
+
+
 import CategorieList from "./pages/Categorie/CategorieList";
 // import CategorieUpdate from "./pages/Categorie/CategorieUpdate";
 
-import ProduitAdd from "./pages/Produit/ProduitAdd";
 import ProduitList from "./pages/Produit/ProduitList";
-import ProduitUpdate from "./pages/Produit/ProduitUpdate";
-import UserAdd from "./pages/User/UserAdd";
+
 import UserList from "./pages/User/UserList";
-import UserUpdate from "./pages/User/UserUpdate";
 
 import Login from "./pages/Login";
-import VenteAdd from "./pages/Vente/VenteAdd";
-import VenteList from "./pages/Vente/VenteList";
 import Vente from "./pages/Vente/Vente";
 import VenteDetail from "./pages/Vente/VenteDetail";
 
-import AchatAdd from "./pages/Achat/AchatAdd";
-import AchatList from "./pages/Achat/AchatList";
 import Achat from "./pages/Achat/Achat";
 
 import { ProtectedRoute } from "./components/PrivateRoute";
@@ -48,9 +39,8 @@ function App() {
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
 
-        <Route path="/ClientAdd" element={<ProtectedRoute><ClientAdd /></ProtectedRoute>} />
         <Route path="/ClientList" element={<ProtectedRoute><ClientList /></ProtectedRoute>} />
-        <Route path="/ClientUpdate/:id" element={<ProtectedRoute><ClientUpdate /></ProtectedRoute>} />
+       
 
         <Route path="/FournisseurAdd" element={<ProtectedRoute><FournisseurAdd /></ProtectedRoute>} />
         <Route path="/FournisseurList" element={<ProtectedRoute><FournisseurList /></ProtectedRoute>} />

@@ -5,7 +5,8 @@ function CategorieEditModal({ isOpen, onClose, categorie, onSuccess }) {
   const [nom, setNom] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState(null);
-
+  const URL = import.meta.env.VITE_URL_API;
+  
   useEffect(() => {
     if (categorie) {
       setNom(categorie.nom || '');
@@ -22,7 +23,7 @@ function CategorieEditModal({ isOpen, onClose, categorie, onSuccess }) {
     }
 
     try {
-      await axios.put(`http://localhost:9000/api/categories/${categorie.id}`, {
+      await axios.put(`${URL}/api/categories/${categorie.id}`, {
         nom,
         description,
       });

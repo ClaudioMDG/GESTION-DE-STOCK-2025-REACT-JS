@@ -13,7 +13,7 @@ function FournisseurEditModal({ isOpen, onClose, fournisseur, onSuccess }) {
 
   const [isLoading, setIsLoading] = useState(false);
   const [alert, setAlert] = useState({ message: "", type: "" });
-
+  const URL = import.meta.env.VITE_URL_API;
   useEffect(() => {
     if (fournisseur) {
       setFormData({
@@ -47,7 +47,7 @@ function FournisseurEditModal({ isOpen, onClose, fournisseur, onSuccess }) {
 
     try {
       await axios.put(
-        `http://localhost:9000/api/fournisseurs/${fournisseur.id}`,
+        `${URL}api/fournisseurs/${fournisseur.id}`,
         formData
       );
       onSuccess();

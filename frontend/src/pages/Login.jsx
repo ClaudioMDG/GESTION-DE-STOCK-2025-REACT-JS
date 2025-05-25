@@ -10,7 +10,7 @@ function Login() {
   const [motDePasse, setMotDePasse] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const URL = import.meta.env.VITE_URL_API;
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://localhost:9000/api/login",
+        `${URL}/api/login`,
         {
           email,
           mot_de_passe: motDePasse,

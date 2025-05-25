@@ -1,7 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+require("dotenv").config();
+const URL = process.env.PORT_SERVER;
 const clientRoutes = require("./src/routes/clientsRoutes");
 const fournisseurRoutes = require("./src/routes/fournisseursRoutes");
 const categoryRoutes = require("./src/routes/categoryRoutes");
@@ -35,6 +36,6 @@ app.use("/api/stats", statsRoutes); // Route des achats
 
 app.use("/api", loginRoutes);
 
-app.listen(9000, () => {
+app.listen(URL, () => {
   console.log("✅ Serveur en marche sur le port 9000");
 });
