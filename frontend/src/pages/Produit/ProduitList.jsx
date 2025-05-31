@@ -6,7 +6,11 @@ import {
   RefreshCw,
   FileDown,
   FileUp,
-  Clock3, Search, Tag, Truck, AlertTriangle
+  Clock3,
+  Search,
+  Tag,
+  Truck,
+  AlertTriangle,
 } from "lucide-react";
 import Sidebar from "../Layouts/Sidebar";
 import AlertBottomLeft from "../../components/AlertBottomLeft";
@@ -37,14 +41,21 @@ function ProduitList() {
   const indexOfFirst = indexOfLast - produitsParPage;
   const currentProduits = filteredProduits.slice(indexOfFirst, indexOfLast);
 
-  
   useEffect(() => {
     fetchData();
   }, []);
 
   useEffect(() => {
     filtrerEtTrier();
-  }, [produits, search, sortColumn, sortAsc, categorieFiltre, fournisseurFiltre, seuilFiltre]);
+  }, [
+    produits,
+    search,
+    sortColumn,
+    sortAsc,
+    categorieFiltre,
+    fournisseurFiltre,
+    seuilFiltre,
+  ]);
   const fetchData = () => {
     axios.get(`${URL}/api/produits`).then((res) => {
       setProduits(res.data);
@@ -66,7 +77,7 @@ function ProduitList() {
         !fournisseurFiltre || p.fournisseur_id === parseInt(fournisseurFiltre);
       return matchNom && matchCategorie && matchFournisseur;
     });
-  
+
     // Filtrage ou tri par seuil
     if (seuilFiltre === "haut") {
       filtrés = filtrés.sort((a, b) => b.seuil_alerte - a.seuil_alerte);
@@ -79,11 +90,9 @@ function ProduitList() {
         return 0;
       });
     }
-  
+
     setFilteredProduits(filtrés);
   };
-  
-  
 
   const toggleSort = (column) => {
     if (sortColumn === column) {
@@ -99,11 +108,14 @@ function ProduitList() {
       .delete(`${URL}/api/produits/${id}`)
       .then(() => {
         setProduits(produits.filter((p) => p.id !== id));
-        setAlert({ message: "Produit supprimé avec succès !", type: "success" });
+        setAlert({
+          message: "Produit supprimé avec succès !",
+          type: "success",
+        });
         // Réinitialiser l'alerte après 3 secondes
-      setTimeout(() => {
-        setAlert(null);
-      }, 3000);
+        setTimeout(() => {
+          setAlert(null);
+        }, 3000);
       })
       .catch((err) => {
         if (
@@ -116,22 +128,21 @@ function ProduitList() {
             type: "error",
           });
           // Réinitialiser l'alerte après 3 secondes
-      setTimeout(() => {
-        setAlert(null);
-      }, 3000);
+          setTimeout(() => {
+            setAlert(null);
+          }, 3000);
         } else {
           setAlert({
             message: "Une erreur est survenue lors de la suppression.",
             type: "error",
           });
           // Réinitialiser l'alerte après 3 secondes
-      setTimeout(() => {
-        setAlert(null);
-      }, 3000);
+          setTimeout(() => {
+            setAlert(null);
+          }, 3000);
         }
       });
   };
-  
 
   const handleAddSuccess = () => {
     setIsModalOpen(false);
@@ -251,67 +262,78 @@ function ProduitList() {
 
           {/* Recherche */}
           <div className="flex gap-4 mb-4">
-  {/* Recherche */}
-  <div className="flex items-center border rounded px-3 py-2 w-1/4" title="Rechercher un produit">
-    <Search size={18} className="mr-2 text-gray-500" />
-    <input
-      type="text"
-      placeholder="Rechercher un produit..."
-      value={search}
-      onChange={(e) => setSearch(e.target.value)}
-      className="outline-none w-full"
-    />
-  </div>
+            {/* Recherche */}
+            <div
+              className="flex items-center border rounded px-3 py-2 w-1/4"
+              title="Rechercher un produit"
+            >
+              <Search size={18} className="mr-2 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Rechercher un produit..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="outline-none w-full"
+              />
+            </div>
 
-  {/* Filtre catégorie */}
-  <div className="flex items-center border rounded px-3 py-2 w-1/4" title="Filtrer par catégorie">
-    <Tag size={18} className="mr-2 text-gray-500" />
-    <select
-      value={categorieFiltre}
-      onChange={(e) => setCategorieFiltre(e.target.value)}
-      className="outline-none w-full bg-transparent"
-    >
-      <option value="">Toutes les catégories</option>
-      {categories.map((cat) => (
-        <option key={cat.id} value={cat.id}>
-          {cat.nom}
-        </option>
-      ))}
-    </select>
-  </div>
+            {/* Filtre catégorie */}
+            <div
+              className="flex items-center border rounded px-3 py-2 w-1/4"
+              title="Filtrer par catégorie"
+            >
+              <Tag size={18} className="mr-2 text-gray-500" />
+              <select
+                value={categorieFiltre}
+                onChange={(e) => setCategorieFiltre(e.target.value)}
+                className="outline-none w-full bg-transparent"
+              >
+                <option value="">Toutes les catégories</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-  {/* Filtre fournisseur */}
-  <div className="flex items-center border rounded px-3 py-2 w-1/4" title="Filtrer par fournisseur">
-    <Truck size={18} className="mr-2 text-gray-500" />
-    <select
-      value={fournisseurFiltre}
-      onChange={(e) => setFournisseurFiltre(e.target.value)}
-      className="outline-none w-full bg-transparent"
-    >
-      <option value="">Tous les fournisseurs</option>
-      {fournisseurs.map((f) => (
-        <option key={f.id} value={f.id}>
-          {f.nom}
-        </option>
-      ))}
-    </select>
-  </div>
+            {/* Filtre fournisseur */}
+            <div
+              className="flex items-center border rounded px-3 py-2 w-1/4"
+              title="Filtrer par fournisseur"
+            >
+              <Truck size={18} className="mr-2 text-gray-500" />
+              <select
+                value={fournisseurFiltre}
+                onChange={(e) => setFournisseurFiltre(e.target.value)}
+                className="outline-none w-full bg-transparent"
+              >
+                <option value="">Tous les fournisseurs</option>
+                {fournisseurs.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.nom}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-  {/* Filtre seuil */}
-  <div className="flex items-center border rounded px-3 py-2 w-1/4" title="Filtrer par seuil (haut/bas)">
-    <AlertTriangle size={18} className="mr-2 text-gray-500" />
-    <select
-      value={seuilFiltre}
-      onChange={(e) => setSeuilFiltre(e.target.value)}
-      className="outline-none w-full bg-transparent"
-    >
-      <option value="">Tous les seuils</option>
-      <option value="haut">Seuil le plus haut</option>
-      <option value="bas">Seuil le plus bas</option>
-    </select>
-  </div>
-</div>
-
+            {/* Filtre seuil */}
+            <div
+              className="flex items-center border rounded px-3 py-2 w-1/4"
+              title="Filtrer par seuil (haut/bas)"
+            >
+              <AlertTriangle size={18} className="mr-2 text-gray-500" />
+              <select
+                value={seuilFiltre}
+                onChange={(e) => setSeuilFiltre(e.target.value)}
+                className="outline-none w-full bg-transparent"
+              >
+                <option value="">Tous les seuils</option>
+                <option value="haut">Seuil le plus haut</option>
+                <option value="bas">Seuil le plus bas</option>
+              </select>
+            </div>
+          </div>
 
           <div className="overflow-x-auto">
             <table className="w-full table-auto">

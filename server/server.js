@@ -32,7 +32,7 @@ app.use("/api/produits", produitRoutes);
 app.use("/api/utilisateurs", userRoutes);
 app.use("/api/ventes", venteRoutes);
 app.use("/api/achats", achatRoutes); // Route des achats
-app.use("/api/stats", statsRoutes); // Route des achats
+app.use("/api/dashboard", statsRoutes); // Route des achats
 
 app.use("/api", loginRoutes);
 

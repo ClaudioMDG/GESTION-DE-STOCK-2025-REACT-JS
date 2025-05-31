@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const statsController = require("../controllers/statsController");
+const dashboardController = require("../controllers/dashboardController");
 
-router.get('/', statsController.getStats);
+// Route GET pour récupérer les données du tableau de bord avec filtres en query
+router.get('/', dashboardController.getDashboardData);
 
 module.exports = router;

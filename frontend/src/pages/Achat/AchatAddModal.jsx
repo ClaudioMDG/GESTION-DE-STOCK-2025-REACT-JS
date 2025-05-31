@@ -199,9 +199,9 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
                     className="border rounded-lg p-4 shadow hover:shadow-lg transition"
                   >
                     {/* Image du produit */}
-                    {p.image_url && (
+                    {p.image_path && (
                       <img
-                        src={p.image_url}
+                        src={`http://localhost:9000${p.image_path}`}
                         alt={p.nom}
                         className="w-full h-32 object-cover mb-2 rounded"
                       />

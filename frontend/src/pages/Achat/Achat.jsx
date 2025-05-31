@@ -28,15 +28,25 @@ function Achat() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success"); // success | error | info | warning
   
+  // Fetch achats et ajoute un timestamp local pour suivi
   const fetchAchats = async () => {
     try {
       const response = await fetch(`${URL}/api/achats`);
       if (!response.ok) throw new Error("Erreur lors du chargement des achats");
-      setAchats(await response.json());
+      const data = await response.json();
+
+      const achatsAvecTimestamp = data.map((achat) => ({
+        ...achat,
+        // On peut utiliser date_achat comme référence, mais on ajoute un timestamp pour gestion locale si besoin
+        _fetchedAt: Date.now(),
+      }));
+
+      setAchats(achatsAvecTimestamp);
     } catch (error) {
       setError(error.message);
     }
   };
+
   useEffect(() => {
     const fetchFournisseurs = async () => {
       try {
@@ -53,6 +63,14 @@ function Achat() {
     fetchFournisseurs();
   }, []);
 
+  // Re-render toutes les minutes pour mise à jour du badge "Nouveau"
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAchats((prev) => [...prev]);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const getFournisseurNameById = (id) => {
     const f = fournisseurs.find((x) => x.id === id);
     return f ? f.nom.toLowerCase() : "Fournisseur inconnu";
@@ -67,9 +85,6 @@ function Achat() {
         throw new Error(
           "Erreur lors de la récupération des détails de l'achat"
         );
-      // const details = await response.json();
-      // console.log("Détails reçus:", details);
-
       setDetailsProduits(await response.json());
       setSelectedAchat(achats.find((a) => a.id === achatId));
     } catch (error) {
@@ -82,20 +97,12 @@ function Achat() {
     setDetailsProduits([]);
   };
 
-  const sortedAchats = [...achats].sort((a, b) => {
-    const aVal =
-      sortColumn === "fournisseur"
-        ? getFournisseurNameById(a.fournisseur_id)
-        : a[sortColumn];
-    const bVal =
-      sortColumn === "fournisseur"
-        ? getFournisseurNameById(b.fournisseur_id)
-        : b[sortColumn];
-    if (aVal < bVal) return sortDirection === "asc" ? -1 : 1;
-    if (aVal > bVal) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+  // Trie par date décroissante (nouveaux en haut)
+  const sortedAchats = [...achats].sort(
+    (a, b) => new Date(b.date_achat) - new Date(a.date_achat)
+  );
 
+  // Filtrage
   const filteredAchats = sortedAchats.filter((a) => {
     const nomFournisseur = getFournisseurNameById(a.fournisseur_id);
     const matchSearch = nomFournisseur.includes(
@@ -156,6 +163,13 @@ function Achat() {
       y += 10;
     });
     doc.save("achats_export.pdf");
+  };
+
+  // Fonction qui retourne true si achat fait dans les 10 dernières minutes
+  const isNew = (dateAchat) => {
+    const achatTimestamp = new Date(dateAchat).getTime();
+    const now = Date.now();
+    return now - achatTimestamp <= 10 * 60 * 1000; // 10 minutes en ms
   };
 
   return (
@@ -249,8 +263,8 @@ function Achat() {
               isOpen={showModal}
               onClose={() => setShowModal(false)}
               onAchatAdded={async () => {
-                await fetchAchats(); // ✅ Recharge les achats
-                setShowModal(false); // ✅ Ferme le modal
+                await fetchAchats(); // Recharge les achats
+                setShowModal(false); // Ferme le modal
                 setAlertMessage("Achat ajouté avec succès !");
                 setAlertType("success");
               }}
@@ -293,17 +307,25 @@ function Achat() {
               {paginatedAchats.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
-                    className="text-center py-6 text-gray-500 italic"
+                    colSpan={4}
+                    className="text-center py-8 text-gray-400 italic"
                   >
                     Aucun achat trouvé
                   </td>
                 </tr>
               ) : (
                 paginatedAchats.map((a) => (
-                  <tr key={a.id} className="border-t hover:bg-gray-50">
-                    <td className="px-4 py-3">
+                  <tr
+                    key={a.id}
+                    className="border-t hover:bg-gray-50"
+                  >
+                    <td className="px-4 py-3 flex items-center gap-2">
                       {new Date(a.date_achat).toLocaleDateString()}
+                      {isNew(a.date_achat) && (
+                        <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse">
+                          🆕 Nouveau
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       {getFournisseurNameById(a.fournisseur_id)}
@@ -330,72 +352,49 @@ function Achat() {
           </table>
         </div>
 
-        {totalPages > 1 && (
-          <div className="flex justify-center space-x-2 mt-4">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentPage(i + 1)}
-                className={`px-3 py-1 rounded ${
-                  currentPage === i + 1
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-        )}
-
         {selectedAchat && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 relative">
+          <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center p-6 z-50">
+            <div className="bg-white rounded-xl shadow-lg max-w-xl w-full max-h-[80vh] overflow-auto p-6">
+              <h3 className="text-xl font-semibold mb-4">
+                Détails de l'achat du{" "}
+                {new Date(selectedAchat.date_achat).toLocaleDateString()}
+              </h3>
+              <table className="w-full text-sm border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border px-2 py-1">Produit</th>
+                    <th className="border px-2 py-1">Quantité</th>
+                    <th className="border px-2 py-1">Prix</th>
+                    <th className="border px-2 py-1">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {detailsProduits.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="text-center py-4">
+                        Aucun détail trouvé
+                      </td>
+                    </tr>
+                  ) : (
+                    detailsProduits.map((prod) => (
+                      <tr key={prod.id}>
+                        <td className="border px-2 py-1">{prod.nom}</td>
+                        <td className="border px-2 py-1">{prod.quantite}</td>
+                        <td className="border px-2 py-1">{prod.prix} Ar</td>
+                        <td className="border px-2 py-1">
+                          {prod.quantite * prod.prix} Ar
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
               <button
                 onClick={closeDetails}
-                className="absolute top-4 right-4 bg-red-600 text-white rounded-full w-9 h-9 text-xl flex items-center justify-center hover:bg-red-700"
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
               >
-                &times;
+                Fermer
               </button>
-              <div className="p-6">
-                <h3 className="text-2xl font-bold text-gray-800 mb-4 border-b pb-2">
-                  🧾 Détails de l'Achat
-                </h3>
-                <div className="space-y-2 text-gray-700">
-                  <p>
-                    <strong>📅 Date :</strong>{" "}
-                    {new Date(selectedAchat.date_achat).toLocaleDateString()}
-                  </p>
-                  <p>
-                    <strong>🏢 Fournisseur :</strong>{" "}
-                    {getFournisseurNameById(selectedAchat.fournisseur_id)}
-                  </p>
-                  <p>
-                    <strong>💰 Total :</strong>{" "}
-                    <span className="text-green-600 font-semibold">
-                      {selectedAchat.total} Ar
-                    </span>
-                  </p>
-                </div>
-                <h4 className="text-xl font-semibold text-gray-800 mt-6 mb-2">
-                  📦 Produits
-                </h4>
-                <ul className="list-disc pl-4 space-y-1 text-sm text-gray-700">
-                  {detailsProduits.length > 0 ? (
-                    detailsProduits.map((produit, index) => (
-                      <li key={index}>
-                        <strong>{produit.produit_nom}</strong> —{" "}
-                        {produit.quantite} x {produit.prix_unitaire} Ar ={" "}
-                        <strong>{produit.total} Ar</strong>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="italic text-gray-400">
-                      Aucun produit trouvé.
-                    </li>
-                  )}
-                </ul>
-              </div>
             </div>
           </div>
         )}

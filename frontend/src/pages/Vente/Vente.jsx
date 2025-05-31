@@ -30,20 +30,26 @@ function Vente() {
   const [sortColumn, setSortColumn] = useState(null);
   const [sortDirection, setSortDirection] = useState("asc");
   const [message, setMessage] = useState({ type: "", content: "" });
+  const fetchVentes = async () => {
+    try {
+      const response = await fetch(`${URL}/api/ventes`);
+      if (!response.ok)
+        throw new Error("Erreur lors du chargement des ventes");
+      const data = await response.json();
+
+      const ventesAvecTimestamp = data.map((vente) => ({
+        ...vente,
+        // On peut utiliser date_achat comme référence, mais on ajoute un timestamp pour gestion locale si besoin
+        _fetchedAt: Date.now(),
+      }));
+
+      setVentes(ventesAvecTimestamp);
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   useEffect(() => {
-    const fetchVentes = async () => {
-      try {
-        const response = await fetch(`${URL}/api/ventes`);
-        if (!response.ok)
-          throw new Error("Erreur lors du chargement des ventes");
-        const data = await response.json();
-        setVentes(data);
-      } catch (error) {
-        setError(error.message);
-      }
-    };
-
     const fetchClients = async () => {
       try {
         const response = await fetch(`${URL}/api/clients`);
@@ -60,6 +66,13 @@ function Vente() {
     fetchClients();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAchats((prev) => [...prev]);
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   const getClientNameById = (clientId) => {
     const client = clients.find((client) => client.id === clientId);
     return client ? client.nom.toLowerCase() : "Client inconnu";
@@ -67,9 +80,7 @@ function Vente() {
 
   const handleDetailsClick = async (venteId) => {
     try {
-      const response = await fetch(
-        `${URL}/api/ventes/${venteId}/details`
-      );
+      const response = await fetch(`${URL}/api/ventes/${venteId}/details`);
       if (!response.ok)
         throw new Error(
           "Erreur lors de la récupération des détails de la vente"
@@ -93,17 +104,10 @@ function Vente() {
     setDetailsProduits([]);
   };
 
-  // Trier avant de filtrer
-  const sortedVentes = [...ventes].sort((a, b) => {
-    const aValue =
-      sortColumn === "client" ? getClientNameById(a.client_id) : a[sortColumn];
-    const bValue =
-      sortColumn === "client" ? getClientNameById(b.client_id) : b[sortColumn];
-
-    if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
-    if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
-    return 0;
-  });
+  // Trie par date décroissante (nouveaux en haut)
+  const sortedVentes = [...ventes].sort(
+    (a, b) => new Date(b.date_vente) - new Date(a.date_vente)
+  );
 
   // Ensuite seulement : filtrer
   const filteredVentes = sortedVentes.filter((vente) => {
@@ -160,9 +164,7 @@ function Vente() {
   const handleDelete = async (venteId) => {
     if (window.confirm("Voulez-vous vraiment supprimer cette vente ?")) {
       try {
-        await axios.delete(
-          `${URL}/api/ventes/delete/${venteId}`
-        );
+        await axios.delete(`${URL}/api/ventes/delete/${venteId}`);
         setVentes((prev) => prev.filter((v) => v.id !== venteId));
         setMessage({
           type: "success",
@@ -211,8 +213,14 @@ function Vente() {
     });
 
     doc.save("ventes_export.pdf");
-  };
 
+  };
+  // Fonction qui retourne true si achat fait dans les 10 dernières minutes
+  const isNew = (dateVente) => {
+    const venteTimestamp = new Date(dateVente).getTime();
+    const now = Date.now();
+    return now - venteTimestamp <= 10 * 60 * 1000; // 10 minutes en ms
+  };
   return (
     <div className="flex min-h-screen">
       <div className="w-64">
@@ -328,7 +336,7 @@ function Vente() {
             <VenteAddModal
               isOpen={showModal}
               onClose={() => setShowModal(false)}
-              onVenteAdded={() => console.log("Vente ajoutée !")}
+              onVenteAdded={fetchVentes}
             />
           </div>
         </div>
@@ -392,6 +400,11 @@ function Vente() {
                     <tr key={vente.id} className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3">
                         {new Date(vente.date_vente).toLocaleDateString()}
+                        {isNew(vente.date_vente) && (
+                        <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse">
+                          🆕 Nouveau
+                        </span>
+                      )}
                       </td>
                       <td className="px-4 py-3">
                         {getClientNameById(vente.client_id)}
