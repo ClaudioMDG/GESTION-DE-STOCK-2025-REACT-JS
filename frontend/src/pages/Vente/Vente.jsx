@@ -5,8 +5,9 @@ import VenteAddModal from "./VenteAddModal";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import AlertBottomLeft from "../../components/AlertBottomLeft";
+import { format } from "date-fns";
 
 function Vente() {
   const [ventes, setVentes] = useState([]);
@@ -33,8 +34,7 @@ function Vente() {
   const fetchVentes = async () => {
     try {
       const response = await fetch(`${URL}/api/ventes`);
-      if (!response.ok)
-        throw new Error("Erreur lors du chargement des ventes");
+      if (!response.ok) throw new Error("Erreur lors du chargement des ventes");
       const data = await response.json();
 
       const ventesAvecTimestamp = data.map((vente) => ({
@@ -68,7 +68,7 @@ function Vente() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setAchats((prev) => [...prev]);
+      setVentes((prev) => [...prev]);
     }, 60000);
     return () => clearInterval(interval);
   }, []);
@@ -93,6 +93,10 @@ function Vente() {
       setDetailsProduits(details);
 
       const venteDetails = ventes.find((vente) => vente.id === venteId);
+      if (venteDetails) {
+        venteDetails.details = details; // injecte les détails dans la vente
+      }
+
       setSelectedVente(venteDetails);
     } catch (error) {
       setError(error.message);
@@ -179,42 +183,89 @@ function Vente() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const doc = new jsPDF();
-    const marginLeft = 14;
-    const startY = 20;
-    let currentY = startY;
 
     doc.setFontSize(16);
-    doc.text("🧾 Liste des Ventes", marginLeft, currentY);
+    doc.text("Liste des ventes avec détails", 14, 20);
 
-    doc.setFontSize(12);
-    currentY += 10;
-    doc.text(
-      "Date        | Client             | Total (Ar)",
-      marginLeft,
-      currentY
-    );
-    doc.text(
-      "----------------------------------------------",
-      marginLeft,
-      currentY + 5
-    );
-    currentY += 12;
-
-    filteredVentes.forEach((vente) => {
-      const date = new Date(vente.date_vente).toLocaleDateString();
+    for (const vente of filteredVentes) {
+      const date = format(new Date(vente.date_vente), "dd/MM/yyyy");
       const client = getClientNameById(vente.client_id);
-      const total = vente.total.toString();
+      const total = vente.total.toLocaleString("fr-FR");
 
-      const row = `${date} | ${client} | ${total}`;
-      doc.text(row, marginLeft, currentY);
-      currentY += 8;
+      // En-tête pour chaque vente
+      doc.setFontSize(12);
+      doc.text(
+        `Date : ${date} | Client : ${client} | Total : ${total} Ar`,
+        14,
+        doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 30
+      );
+
+      // Fetch détails produits
+      try {
+        const response = await fetch(`${URL}/api/ventes/${vente.id}/details`);
+        if (!response.ok) throw new Error("Erreur détails vente");
+
+        const details = await response.json();
+
+        const body = details.map((p) => [
+          p.produit_nom,
+          p.quantite,
+          `${p.prix_unitaire} Ar`,
+          `${p.total} Ar`,
+        ]);
+
+        autoTable(doc, {
+          startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 35,
+          head: [["Produit", "Quantité", "Prix unitaire", "Total"]],
+          body,
+          theme: "grid",
+          styles: { fontSize: 10 },
+          headStyles: {
+            fillColor: [33, 150, 243],
+            textColor: [255, 255, 255],
+          },
+        });
+      } catch (err) {
+        console.error(`Erreur chargement détails pour vente ${vente.id}`, err);
+      }
+    }
+
+    doc.save("ventes_avec_details.pdf");
+  };
+
+  const handleExportVentePDF = (vente) => {
+    const doc = new jsPDF();
+    const clientName = getClientNameById(vente.client_id);
+
+    doc.setFontSize(14);
+    doc.text("Détail de la Vente", 14, 20);
+    doc.setFontSize(11);
+    doc.text(
+      `Date : ${format(new Date(vente.date_vente), "dd/MM/yyyy")}`,
+      14,
+      30
+    );
+    doc.text(`Client : ${clientName}`, 14, 37);
+    doc.text(`Total : ${vente.total.toLocaleString("fr-FR")} Ar`, 14, 44);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [["Produit", "Quantité", "PU", "Total"]],
+      body: (vente.details || []).map((p) => [
+        p.produit_nom,
+        p.quantite,
+        p.prix_unitaire,
+        p.total,
+      ]),
+      theme: "striped",
+      styles: { fontSize: 10, cellPadding: 3 },
     });
 
-    doc.save("ventes_export.pdf");
-
+    doc.save(`vente_${vente.id}.pdf`);
   };
+
   // Fonction qui retourne true si achat fait dans les 10 dernières minutes
   const isNew = (dateVente) => {
     const venteTimestamp = new Date(dateVente).getTime();
@@ -401,10 +452,10 @@ function Vente() {
                       <td className="px-4 py-3">
                         {new Date(vente.date_vente).toLocaleDateString()}
                         {isNew(vente.date_vente) && (
-                        <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse">
-                          🆕 Nouveau
-                        </span>
-                      )}
+                          <span className="text-xs text-white bg-green-500 px-2 py-0.5 rounded-full animate-pulse">
+                            🆕 Nouveau
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         {getClientNameById(vente.client_id)}
@@ -417,6 +468,21 @@ function Vente() {
                         >
                           Détails
                         </button>
+                        <button
+                          onClick={async () => {
+                            const response = await fetch(
+                              `${URL}/api/ventes/${vente.id}/details`
+                            );
+                            const details = await response.json();
+                            const venteWithDetails = { ...vente, details };
+                            handleExportVentePDF(venteWithDetails);
+                          }}
+                          className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                          title="Exporter PDF"
+                        >
+                          PDF
+                        </button>
+
                         <button
                           onClick={() => handleDelete(vente.id)}
                           className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 flex items-center"

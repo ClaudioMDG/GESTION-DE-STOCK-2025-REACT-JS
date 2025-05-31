@@ -17,6 +17,8 @@ import AlertBottomLeft from "../../components/AlertBottomLeft";
 import ProduitAddModal from "./ProduitAddModal";
 import ProduitEditModal from "./ProduitEditModal";
 import axios from "axios";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 function ProduitList() {
   const [produits, setProduits] = useState([]);
@@ -67,7 +69,36 @@ function ProduitList() {
       setFournisseurs(res.data);
     });
   };
-
+  useEffect(() => {
+    const now = new Date();
+    const today = now.toISOString().split("T")[0]; // yyyy-mm-dd
+    const alertsKey = "alertsShown_" + today;
+    const alerts = JSON.parse(localStorage.getItem(alertsKey)) || [];
+  
+    if (alerts.length < 2) {
+      const produitsAlerte = produits.filter(
+        (p) => p.quantite_en_stock < p.seuil_alerte
+      );
+  
+      if (produitsAlerte.length > 0) {
+        // Afficher l'alerte
+        setAlert({
+          message: `${produitsAlerte.length} produit(s) en-dessous du seuil d'alerte.`,
+          type: "warning",
+        });
+  
+        // Enregistrer l'heure de cette alerte
+        alerts.push(now.toISOString());
+        localStorage.setItem(alertsKey, JSON.stringify(alerts));
+  
+        // Supprimer l'alerte après quelques secondes
+        setTimeout(() => {
+          setAlert(null);
+        }, 5000);
+      }
+    }
+  }, [produits]);
+  
   const filtrerEtTrier = () => {
     let filtrés = produits.filter((p) => {
       const matchNom = p.nom.toLowerCase().includes(search.toLowerCase());
@@ -206,6 +237,96 @@ function ProduitList() {
     (p) => p.quantite_en_stock < p.seuil_alerte
   ).length;
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Liste des Produits", 14, 22);
+
+    const columns = [
+      "Nom",
+      "Description",
+      "Prix Achat",
+      "Prix Vente",
+      "Stock",
+      "Seuil",
+      "Catégorie",
+      "Fournisseur",
+    ];
+
+    const rows = filteredProduits.map((p) => [
+      p.nom,
+      p.description,
+      p.prix_achat + " Ar",
+      p.prix_vente + " Ar",
+      p.quantite_en_stock,
+      p.seuil_alerte,
+      getCategorieName(p.categorie_id),
+      getFournisseurName(p.fournisseur_id),
+    ]);
+
+    autoTable(doc, {
+      startY: 30,
+      head: [columns],
+      body: rows,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [22, 160, 133] },
+      theme: "striped",
+    });
+
+    doc.save("produits.pdf");
+  };
+  const exportSinglePDF = (produit) => {
+    const doc = new jsPDF();
+  
+    const exportDate = new Date().toLocaleDateString("fr-FR", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  
+    // Titre
+    doc.setFontSize(16);
+    doc.setTextColor("#1565c0");
+    doc.text(`Détails du produit : ${produit.nom}`, 14, 20);
+  
+    // Date d’exportation
+    doc.setFontSize(11);
+    doc.setTextColor("#555");
+    doc.text(`Exporté le : ${exportDate}`, 14, 27);
+  
+    // Détails du produit
+    doc.setFontSize(12);
+    doc.setTextColor("#000");
+  
+    const details = [
+      ["Nom", produit.nom],
+      ["Description", produit.description],
+      ["Prix Achat", produit.prix_achat + " Ar"],
+      ["Prix Vente", produit.prix_vente + " Ar"],
+      ["Quantité en stock", produit.quantite_en_stock.toString()],
+      ["Seuil d'alerte", produit.seuil_alerte.toString()],
+      ["Catégorie", getCategorieName(produit.categorie_id)],
+      ["Fournisseur", getFournisseurName(produit.fournisseur_id)],
+    ];
+  
+    // Générer le tableau avec autoTable
+    autoTable(doc, {
+      startY: 35,
+      head: [["Attribut", "Valeur"]],
+      body: details,
+      styles: { fontSize: 11 },
+      headStyles: { fillColor: [33, 150, 243] },
+      theme: "grid",
+    });
+  
+    // Sauvegarder le PDF
+    doc.save(`produit_${produit.nom}.pdf`);
+  };
+  
+
   return (
     <div className="flex min-h-screen">
       <div className="w-64">
@@ -225,11 +346,12 @@ function ProduitList() {
                 <RefreshCw size={16} />
               </button>
               <button
-                onClick={exportCSV}
+                onClick={exportPDF}
                 className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
               >
                 <FileDown size={16} className="inline" />
               </button>
+
               <label className="cursor-pointer bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600">
                 <FileUp size={16} className="inline mr-1" />
                 <input
@@ -424,10 +546,11 @@ function ProduitList() {
                           <Trash2 size={18} />
                         </button>
                         <button
-                          onClick={() => alert("Historique à implémenter")}
-                          className="text-blue-500 hover:text-blue-700"
+                          onClick={() => exportSinglePDF(produit)}
+                          className="text-green-600 hover:text-green-800"
+                          title="Exporter ce produit en PDF"
                         >
-                          <Clock3 size={18} />
+                          <FileDown size={18} />
                         </button>
                       </div>
                     </td>

@@ -7,6 +7,8 @@ import AchatAddModal from "./AchatAddModal";
 import axios from "axios";
 import { Trash2 } from "lucide-react";
 import jsPDF from "jspdf";
+import { format } from "date-fns";
+import autoTable from "jspdf-autotable";
 
 function Achat() {
   const [achats, setAchats] = useState([]);
@@ -27,7 +29,7 @@ function Achat() {
   const URL = import.meta.env.VITE_URL_API;
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("success"); // success | error | info | warning
-  
+
   // Fetch achats et ajoute un timestamp local pour suivi
   const fetchAchats = async () => {
     try {
@@ -78,9 +80,7 @@ function Achat() {
 
   const handleDetailsClick = async (achatId) => {
     try {
-      const response = await fetch(
-        `${URL}/api/achats/${achatId}/details`
-      );
+      const response = await fetch(`${URL}/api/achats/${achatId}/details`);
       if (!response.ok)
         throw new Error(
           "Erreur lors de la récupération des détails de l'achat"
@@ -139,9 +139,7 @@ function Achat() {
   const handleDelete = async (achatId) => {
     if (window.confirm("Supprimer cet achat ?")) {
       try {
-        await axios.delete(
-          `${URL}/api/achats/delete/${achatId}`
-        );
+        await axios.delete(`${URL}/api/achats/delete/${achatId}`);
         setAchats((prev) => prev.filter((a) => a.id !== achatId));
         setAlertMessage("Suppression réussie !");
         setAlertType("success");
@@ -152,17 +150,87 @@ function Achat() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const doc = new jsPDF();
-    doc.text("🧾 Liste des Achats", 14, 20);
-    let y = 30;
-    filteredAchats.forEach((a) => {
-      const date = new Date(a.date_achat).toLocaleDateString();
-      const fournisseur = getFournisseurNameById(a.fournisseur_id);
-      doc.text(`${date} | ${fournisseur} | ${a.total} Ar`, 14, y);
-      y += 10;
+
+    doc.setFontSize(16);
+    doc.text("Liste des achats avec détails", 14, 20);
+
+    for (const achat of filteredAchats) {
+      const date = format(new Date(achat.date_achat), "dd/MM/yyyy");
+      const fournisseur = getFournisseurNameById(achat.fournisseur_id);
+      const total = achat.total.toLocaleString("fr-FR");
+
+      // En-tête pour chaque achat
+      doc.setFontSize(12);
+      doc.text(
+        `Date : ${date} | Fournisseur : ${fournisseur} | Total : ${total} Ar`,
+        14,
+        doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 30
+      );
+
+      // Fetch détails produits
+      try {
+        const response = await fetch(`${URL}/api/achats/${achat.id}/details`);
+        if (!response.ok) throw new Error("Erreur détails achat");
+
+        const details = await response.json();
+
+        const body = details.map((p) => [
+          p.produit_nom, // nom du produit
+          p.quantite,
+          `${p.prix_unitaire} Ar`,
+          `${p.total} Ar`,
+        ]);
+
+        autoTable(doc, {
+          startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 35,
+          head: [["Produit", "Quantité", "Prix unitaire", "Total"]],
+          body,
+          theme: "grid",
+          styles: { fontSize: 10 },
+          headStyles: {
+            fillColor: [33, 150, 243],
+            textColor: [255, 255, 255],
+          },
+        });
+      } catch (err) {
+        console.error(`Erreur chargement détails pour achat ${achat.id}`, err);
+      }
+    }
+
+    doc.save("achats_avec_details.pdf");
+  };
+
+  const handleExportAchatPDF = (achat) => {
+    const doc = new jsPDF();
+    const fournisseurName = getFournisseurNameById(achat.fournisseur_id);
+
+    doc.setFontSize(14);
+    doc.text("Détail de l'Achat", 14, 20);
+    doc.setFontSize(11);
+    doc.text(
+      `Date : ${format(new Date(achat.date_achat), "dd/MM/yyyy")}`,
+      14,
+      30
+    );
+    doc.text(`Fournisseur : ${fournisseurName}`, 14, 37);
+    doc.text(`Total : ${achat.total.toLocaleString("fr-FR")} Ar`, 14, 44);
+
+    autoTable(doc, {
+      startY: 55,
+      head: [["Produit", "Quantité", "PU", "Total"]],
+      body: (achat.details || []).map((p) => [
+        p.produit_nom,
+        p.quantite,
+        p.prix_unitaire,
+        p.total,
+      ]),
+      theme: "striped",
+      styles: { fontSize: 10, cellPadding: 3 },
     });
-    doc.save("achats_export.pdf");
+
+    doc.save(`achat_${achat.id}.pdf`);
   };
 
   // Fonction qui retourne true si achat fait dans les 10 dernières minutes
@@ -315,10 +383,7 @@ function Achat() {
                 </tr>
               ) : (
                 paginatedAchats.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="border-t hover:bg-gray-50"
-                  >
+                  <tr key={a.id} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3 flex items-center gap-2">
                       {new Date(a.date_achat).toLocaleDateString()}
                       {isNew(a.date_achat) && (
@@ -338,6 +403,21 @@ function Achat() {
                       >
                         Détails
                       </button>
+                      <button
+                        onClick={async () => {
+                          const response = await fetch(
+                            `${URL}/api/achats/${a.id}/details`
+                          );
+                          const details = await response.json();
+                          const achatWithDetails = { ...a, details };
+                          handleExportAchatPDF(achatWithDetails);
+                        }}
+                        className="px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
+                        title="Exporter PDF"
+                      >
+                        PDF
+                      </button>
+
                       <button
                         onClick={() => handleDelete(a.id)}
                         className="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700"
@@ -378,11 +458,11 @@ function Achat() {
                   ) : (
                     detailsProduits.map((prod) => (
                       <tr key={prod.id}>
-                        <td className="border px-2 py-1">{prod.nom}</td>
+                        <td className="border px-2 py-1">{prod.produit_nom}</td>
                         <td className="border px-2 py-1">{prod.quantite}</td>
-                        <td className="border px-2 py-1">{prod.prix} Ar</td>
+                        <td className="border px-2 py-1">{prod.prix_unitaire} Ar</td>
                         <td className="border px-2 py-1">
-                          {prod.quantite * prod.prix} Ar
+                          {prod.total} Ar
                         </td>
                       </tr>
                     ))

@@ -50,29 +50,43 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
   }, [searchTerm, produits]);
 
   const handleProductChange = (productId, quantity) => {
-    if (quantity <= 0 || isNaN(quantity)) {
+    const product = produits.find((p) => p.id === productId);
+
+    if (!product) return;
+    const stockDispo = product.quantite_en_stock;
+
+    if (quantity <= 0) {
       setSelectedProducts((prev) => prev.filter((p) => p.id !== productId));
-    } else {
-      setSelectedProducts((prev) => {
-        const index = prev.findIndex((p) => p.id === productId);
-        if (index !== -1) {
-          const updated = [...prev];
-          updated[index].quantity = quantity;
-          return updated;
-        } else {
-          const product = produits.find((p) => p.id === productId);
-          return [
-            ...prev,
-            {
-              id: productId,
-              quantity,
-              price: product.prix_vente,
-              name: product.nom,
-            },
-          ];
-        }
-      });
+      return;
     }
+
+    if (quantity > stockDispo) {
+      setError(
+        `Quantité demandée pour "${product.nom}" dépasse le stock disponible (${stockDispo}).`
+      );
+      return;
+    }
+
+    setError(null); // Réinitialiser l'erreur si tout est OK
+
+    setSelectedProducts((prev) => {
+      const index = prev.findIndex((p) => p.id === productId);
+      if (index !== -1) {
+        const updated = [...prev];
+        updated[index].quantity = quantity;
+        return updated;
+      } else {
+        return [
+          ...prev,
+          {
+            id: productId,
+            quantity,
+            price: product.prix_vente,
+            name: product.nom,
+          },
+        ];
+      }
+    });
   };
 
   useEffect(() => {
@@ -204,6 +218,7 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
                   <input
                     type="number"
                     min="1"
+                    max={p.quantite_en_stock}
                     placeholder="Quantité"
                     onChange={(e) =>
                       handleProductChange(p.id, parseInt(e.target.value) || 0)
@@ -286,7 +301,10 @@ function VenteAddModal({ isOpen, onClose, onVenteAdded }) {
         <div className="mt-6 text-center">
           <button
             onClick={handleSubmit}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded"
+            disabled={!!error}
+            className={`bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded ${
+              error ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           >
             Valider la Vente
           </button>
