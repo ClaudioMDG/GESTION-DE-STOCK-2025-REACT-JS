@@ -201,7 +201,7 @@ function AchatAddModal({ isOpen, onClose, onAchatAdded }) {
                     {/* Image du produit */}
                     {p.image_path && (
                       <img
-                        src={`http://localhost:9000${p.image_path}`}
+                        src={`${URL}${p.image_path}`}
                         alt={p.nom}
                         className="w-full h-32 object-cover mb-2 rounded"
                       />

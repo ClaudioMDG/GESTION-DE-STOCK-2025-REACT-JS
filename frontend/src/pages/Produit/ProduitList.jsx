@@ -498,7 +498,7 @@ function ProduitList() {
                     <td className="px-4 py-2">
                       {produit.image_path ? (
                         <img
-                          src={`http://localhost:9000${produit.image_path}`}
+                          src={`${URL}${produit.image_path}`}
                           alt={produit.nom}
                           className="w-16 h-16 object-cover rounded"
                           onError={(e) => {

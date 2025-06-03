@@ -30,7 +30,7 @@ const periods = ["day", "week", "month", "quarter"];
 function Dashboard() {
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
-
+  const URL = import.meta.env.VITE_URL_API;
   // Filtres
   const [period, setPeriod] = useState("month");
   const [startDate, setStartDate] = useState(
@@ -42,7 +42,7 @@ function Dashboard() {
 
   useEffect(() => {
     // Charger catégories pour filtre
-    fetch("http://localhost:9000/api/categories")
+    fetch(`${URL}/api/categories`)
       .then((res) => res.json())
       .then((json) => setCategories(json.data || []))
       .catch(() => setCategories([]));
@@ -53,7 +53,7 @@ function Dashboard() {
   }, [period, startDate, endDate, selectedCategory]);
 
   function fetchDashboardData() {
-    let url = `http://localhost:9000/api/dashboard?period=${period}&startDate=${startDate}&endDate=${endDate}`;
+    let url = `${URL}/api/dashboard?period=${period}&startDate=${startDate}&endDate=${endDate}`;
     if (selectedCategory) url += `&categoryId=${selectedCategory}`;
 
     fetch(url)
