@@ -1,75 +1,89 @@
-const db = require("../config/db");
+const { Pool } = require("pg");
 
+const db = new Pool({
+  connectionString: process.env.DATABASE_URL // adapte cette ligne selon ton environnement
+});
 // Récupérer tous les clients
-const getAllClients = (req, res) => {
-  db.all("SELECT * FROM clients", [], (err, rows) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json(rows);
-  });
+const getAllClients = async (req, res) => {
+  try {
+    const result = await db.query("SELECT * FROM clients ORDER BY id ASC");
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Récupérer un client par ID
-const getClientById = (req, res) => {
+const getClientById = async (req, res) => {
   const id = req.params.id;
-  db.get("SELECT * FROM clients WHERE id = ?", [id], (err, row) => {
-    if (err) return res.status(500).json({ message: err.message });
-    if (!row) return res.status(404).json({ message: "Client non trouvé" });
-    res.json(row);
-  });
+  try {
+    const result = await db.query("SELECT * FROM clients WHERE id = $1", [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Client non trouvé" });
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Créer un client
-const createClient = (req, res) => {
+const createClient = async (req, res) => {
   const { nom, email, telephone, adresse } = req.body;
-  db.run(
-    `INSERT INTO clients (nom, email, telephone, adresse) VALUES (?, ?, ?, ?)`,
-    [nom, email, telephone, adresse],
-    function (err) {
-      if (err) return res.status(500).json({ message: err.message });
-      res.status(201).json({ id: this.lastID, nom, email, telephone, adresse });
-    }
-  );
+  try {
+    const result = await db.query(
+      `INSERT INTO clients (nom, email, telephone, adresse) VALUES ($1, $2, $3, $4) RETURNING id`,
+      [nom, email, telephone, adresse]
+    );
+    res.status(201).json({ id: result.rows[0].id, nom, email, telephone, adresse });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // Mettre à jour un client
-const updateClient = (req, res) => {
+const updateClient = async (req, res) => {
   const id = req.params.id;
   const { nom, email, telephone, adresse } = req.body;
-  db.run(
-    `UPDATE clients SET nom = ?, email = ?, telephone = ?, adresse = ? WHERE id = ?`,
-    [nom, email, telephone, adresse, id],
-    function (err) {
-      if (err) return res.status(500).json({ message: err.message });
-      if (this.changes === 0)
-        return res.status(404).json({ message: "Client non trouvé" });
-      res.json({ message: "Client mis à jour avec succès" });
+
+  try {
+    const result = await db.query(
+      `UPDATE clients SET nom = $1, email = $2, telephone = $3, adresse = $4 WHERE id = $5`,
+      [nom, email, telephone, adresse, id]
+    );
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "Client non trouvé" });
     }
-  );
+    res.json({ message: "Client mis à jour avec succès" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
-const deleteClient = (req, res) => {
+// Supprimer un client
+const deleteClient = async (req, res) => {
   const id = req.params.id;
 
-  // Vérifier s'il y a des ventes liées au client
-  const checkQuery = `SELECT COUNT(*) AS count FROM ventes WHERE client_id = ?`;
-  db.get(checkQuery, [id], (err, row) => {
-    if (err) return res.status(500).json({ message: err.message });
+  try {
+    const checkResult = await db.query(`SELECT COUNT(*) FROM ventes WHERE client_id = $1`, [id]);
+    const count = parseInt(checkResult.rows[0].count, 10);
 
-    if (row.count > 0) {
-      // Il y a au moins une vente liée => interdit de supprimer
-      return res.status(400).json({ message: "Impossible de supprimer ce client car il est lié à une ou plusieurs ventes." });
+    if (count > 0) {
+      return res.status(400).json({
+        message: "Impossible de supprimer ce client car il est lié à une ou plusieurs ventes.",
+      });
     }
 
-    // Sinon on peut supprimer le client
-    db.run(`DELETE FROM clients WHERE id = ?`, [id], function (err) {
-      if (err) return res.status(500).json({ message: err.message });
-      if (this.changes === 0)
-        return res.status(404).json({ message: "Client non trouvé" });
-      res.json({ message: "Client supprimé avec succès" });
-    });
-  });
-};
+    const deleteResult = await db.query(`DELETE FROM clients WHERE id = $1`, [id]);
+    if (deleteResult.rowCount === 0) {
+      return res.status(404).json({ message: "Client non trouvé" });
+    }
 
+    res.json({ message: "Client supprimé avec succès" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 
 module.exports = {
   getAllClients,

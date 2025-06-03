@@ -1,161 +1,122 @@
-const db = require("../config/db");
+
 const { updateStock } = require("./produitController");
+const { Pool } = require("pg");
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, // adapte selon ton environnement
+});
 
 // Créer une nouvelle vente
-exports.createVente = (req, res) => {
+exports.createVente = async (req, res) => {
   const { client_id, total, date_vente, utilisateur_id, produits } = req.body;
+  const client = await pool.connect();
 
-  db.serialize(() => {
-    // Commencer une transaction
-    db.run("BEGIN TRANSACTION");
+  try {
+    await client.query("BEGIN");
 
-    // Insérer la vente dans la table 'ventes'
-    db.run(
-      "INSERT INTO ventes (client_id, date_vente, total, utilisateur_id) VALUES (?, ?, ?, ?)",
-      [client_id, date_vente, total, utilisateur_id],
-      function (err) {
-        if (err) {
-          db.run("ROLLBACK");
-          return res.status(500).json({
-            message: "Erreur lors de la création de la vente",
-            error: err,
-          });
-        }
+    // Insérer la vente
+    const insertVenteText = `
+      INSERT INTO ventes (client_id, date_vente, total, utilisateur_id)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+    `;
+    const { rows } = await client.query(insertVenteText, [client_id, date_vente, total, utilisateur_id]);
+    const venteId = rows[0].id;
 
-        const venteId = this.lastID;
+    // Préparer insertion détails
+    const insertDetailsText = `
+      INSERT INTO ventes_details (vente_id, produit_id, quantite, prix_unitaire, total)
+      VALUES ($1, $2, $3, $4, $5)
+    `;
 
-        // Ajouter les détails de la vente dans 'ventes_details'
-        const detailQuery =
-          "INSERT INTO ventes_details (vente_id, produit_id, quantite, prix_unitaire, total) VALUES (?, ?, ?, ?, ?)";
-        const details = produits.map((prod) => [
-          venteId,
-          prod.produit_id,
-          prod.quantite,
-          prod.prix_unitaire,
-          prod.quantite * prod.prix_unitaire, // Calcul du total pour chaque produit
-        ]);
+    // Insérer chaque détail et mettre à jour le stock
+    for (const prod of produits) {
+      const totalProduit = prod.quantite * prod.prix_unitaire;
 
-        const insertDetails = db.prepare(detailQuery);
+      await client.query(insertDetailsText, [
+        venteId,
+        prod.produit_id,
+        prod.quantite,
+        prod.prix_unitaire,
+        totalProduit,
+      ]);
 
-        details.forEach((detail) => {
-          insertDetails.run(detail, (err) => {
-            if (err) {
-              db.run("ROLLBACK");
-              return res.status(500).json({
-                message: "Erreur lors de l'ajout des détails de la vente",
-                error: err,
-              });
-            }
+      // Mettre à jour le stock (updateStock doit retourner une Promise)
+      await updateStock(prod.produit_id, -prod.quantite);
+    }
 
-            // Mettre à jour le stock après chaque produit vendu
-            updateStock(detail[1], -detail[2], (err) => {
-              if (err) {
-                db.run("ROLLBACK");
-                return res.status(500).json({
-                  message: "Erreur lors de la mise à jour du stock",
-                  error: err,
-                });
-              }
-            });
-          });
-        });
-
-        insertDetails.finalize();
-
-        db.run("COMMIT");
-        res.status(201).json({ message: "Vente créée avec succès", venteId });
-      }
-    );
-  });
+    await client.query("COMMIT");
+    res.status(201).json({ message: "Vente créée avec succès", venteId });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ message: "Erreur lors de la création de la vente", error: err.message });
+  } finally {
+    client.release();
+  }
 };
 
 // Récupérer toutes les ventes
-exports.getAllVentes = (req, res) => {
-  db.all("SELECT * FROM ventes", (err, rows) => {
-    if (err) {
-      return res.status(500).json({
-        message: "Erreur lors de la récupération des ventes",
-        error: err,
-      });
-    }
+exports.getAllVentes = async (req, res) => {
+  try {
+    const { rows } = await pool.query("SELECT * FROM ventes");
     res.status(200).json(rows);
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Erreur lors de la récupération des ventes", error: err.message });
+  }
 };
 
 // Récupérer une vente par son ID
-exports.getVenteById = (req, res) => {
+exports.getVenteById = async (req, res) => {
   const { id } = req.params;
-  db.get("SELECT * FROM ventes WHERE id = ?", [id], (err, row) => {
-    if (err) {
-      return res.status(500).json({
-        message: "Erreur lors de la récupération de la vente",
-        error: err,
-      });
-    }
-    if (!row) {
-      return res.status(404).json({ message: "Vente non trouvée" });
-    }
-    res.status(200).json(row);
-  });
+
+  try {
+    const { rows } = await pool.query("SELECT * FROM ventes WHERE id = $1", [id]);
+    if (rows.length === 0) return res.status(404).json({ message: "Vente non trouvée" });
+
+    res.status(200).json(rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: "Erreur lors de la récupération de la vente", error: err.message });
+  }
 };
 
-exports.deleteVente = (req, res) => {
+// Supprimer une vente
+exports.deleteVente = async (req, res) => {
   const { id } = req.params;
+  const client = await pool.connect();
 
-  db.serialize(() => {
-    db.run("BEGIN TRANSACTION");
+  try {
+    await client.query("BEGIN");
 
-    db.all("SELECT * FROM ventes_details WHERE vente_id = ?", [id], (err, details) => {
-      if (err) {
-        db.run("ROLLBACK");
-        console.error("Erreur récupération détails :", err);
-        return res.status(500).json({ message: "Erreur lors de la récupération des détails de la vente" });
-      }
+    // Récupérer les détails pour restaurer le stock
+    const { rows: details } = await client.query("SELECT * FROM ventes_details WHERE vente_id = $1", [id]);
 
-      if (details.length === 0) {
-        db.run("ROLLBACK");
-        return res.status(404).json({ message: "Aucun détail trouvé pour cette vente" });
-      }
+    if (details.length === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Aucun détail trouvé pour cette vente" });
+    }
 
-      // Fonction récursive pour éviter les problèmes de forEach + callbacks
-      const restoreNextStock = (index) => {
-        if (index >= details.length) {
-          // Suppression des détails
-          db.run("DELETE FROM ventes_details WHERE vente_id = ?", [id], function (err) {
-            if (err) {
-              db.run("ROLLBACK");
-              console.error("Erreur suppression détails :", err);
-              return res.status(500).json({ message: "Erreur suppression détails de vente" });
-            }
+    // Restaurer le stock produit par produit
+    for (const detail of details) {
+      await updateStock(detail.produit_id, detail.quantite);
+    }
 
-            // Suppression de la vente
-            db.run("DELETE FROM ventes WHERE id = ?", [id], function (err) {
-              if (err) {
-                db.run("ROLLBACK");
-                console.error("Erreur suppression vente :", err);
-                return res.status(500).json({ message: "Erreur suppression de la vente" });
-              }
+    // Supprimer les détails
+    await client.query("DELETE FROM ventes_details WHERE vente_id = $1", [id]);
 
-              db.run("COMMIT");
-              res.status(200).json({ message: "Vente supprimée avec succès" });
-            });
-          });
-          return;
-        }
+    // Supprimer la vente
+    const deleteVenteRes = await client.query("DELETE FROM ventes WHERE id = $1", [id]);
 
-        const detail = details[index];
-        updateStock(detail.produit_id, detail.quantite, (err) => {
-          if (err) {
-            db.run("ROLLBACK");
-            console.error("Erreur restauration stock :", err);
-            return res.status(500).json({ message: "Erreur lors de la restauration du stock", error: err.message });
-          }
+    if (deleteVenteRes.rowCount === 0) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ message: "Vente non trouvée" });
+    }
 
-          restoreNextStock(index + 1);
-        });
-      };
-
-      restoreNextStock(0); // lancer le premier
-    });
-  });
+    await client.query("COMMIT");
+    res.status(200).json({ message: "Vente supprimée avec succès" });
+  } catch (err) {
+    await client.query("ROLLBACK");
+    res.status(500).json({ message: "Erreur lors de la suppression de la vente", error: err.message });
+  } finally {
+    client.release();
+  }
 };

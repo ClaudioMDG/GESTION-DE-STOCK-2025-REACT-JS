@@ -1,116 +1,128 @@
-// fournisseurController.js
-const db = require("../config/db"); // Assurez-vous que votre config db est correcte
+const { Pool } = require("pg");
 
-exports.ajouterFournisseur = (req, res) => {
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL // adapte cette ligne selon ton environnement
+});
+
+// ➕ Ajouter un fournisseur
+exports.ajouterFournisseur = async (req, res) => {
   const { nom, email, telephone, adresse } = req.body;
 
   if (!nom || !email || !telephone || !adresse) {
     return res.status(400).json({ message: "Tous les champs sont requis" });
   }
 
-  const query = `INSERT INTO fournisseurs (nom, email, telephone, adresse) 
-                 VALUES (?, ?, ?, ?)`;
-
-  db.run(query, [nom, email, telephone, adresse], function (err) {
-    if (err) {
-      console.error("Erreur lors de l'ajout du fournisseur:", err);
-
-      // Gestion des erreurs de contrainte UNIQUE
-      if (err.code === "SQLITE_CONSTRAINT") {
-        let field = "";
-
-        if (err.message.includes("nom")) field = "nom";
-        else if (err.message.includes("email")) field = "email";
-        else if (err.message.includes("telephone")) field = "téléphone";
-
-        return res.status(400).json({
-          message: `Le champ ${field} est déjà utilisé.`,
-        });
-      }
-
-      // Erreur inconnue
-      return res.status(500).json({ message: "Erreur lors de l'ajout du fournisseur" });
-    }
+  try {
+    const result = await pool.query(
+      `
+      INSERT INTO fournisseurs (nom, email, telephone, adresse)
+      VALUES ($1, $2, $3, $4)
+      RETURNING id
+      `,
+      [nom, email, telephone, adresse]
+    );
 
     res.status(201).json({
       message: "Fournisseur ajouté avec succès",
-      fournisseur: { id: this.lastID, nom, email, telephone, adresse },
+      fournisseur: {
+        id: result.rows[0].id,
+        nom,
+        email,
+        telephone,
+        adresse,
+      },
     });
-  });
-};
+  } catch (err) {
+    console.error("Erreur lors de l'ajout du fournisseur:", err);
 
-// Récupérer tous les fournisseurs
-exports.getAllFournisseurs = (req, res) => {
-  const query = `SELECT * FROM fournisseurs`;
+    if (err.code === "23505") {
+      // 23505 = PostgreSQL unique_violation
+      let field = "";
+      if (err.constraint.includes("nom")) field = "nom";
+      else if (err.constraint.includes("email")) field = "email";
+      else if (err.constraint.includes("telephone")) field = "téléphone";
 
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      console.error("Erreur lors de la récupération des fournisseurs:", err);
-      return res
-        .status(500)
-        .json({ message: "Erreur lors de la récupération des fournisseurs" });
+      return res.status(400).json({
+        message: `Le champ ${field} est déjà utilisé.`,
+      });
     }
-    res.status(200).json(rows);
-  });
+
+    res.status(500).json({ message: "Erreur lors de l'ajout du fournisseur" });
+  }
 };
 
-// Récupérer un fournisseur par ID
-exports.getFournisseurById = (req, res) => {
+// 📋 Récupérer tous les fournisseurs
+exports.getAllFournisseurs = async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT * FROM fournisseurs`);
+    res.status(200).json(result.rows);
+  } catch (err) {
+    console.error("Erreur lors de la récupération des fournisseurs:", err);
+    res.status(500).json({ message: "Erreur lors de la récupération des fournisseurs" });
+  }
+};
+
+// 🔍 Récupérer un fournisseur par ID
+exports.getFournisseurById = async (req, res) => {
   const { id } = req.params;
 
-  const query = `SELECT * FROM fournisseurs WHERE id = ?`;
+  try {
+    const result = await pool.query(`SELECT * FROM fournisseurs WHERE id = $1`, [id]);
 
-  db.get(query, [id], (err, row) => {
-    if (err) {
-      console.error("Erreur lors de la récupération du fournisseur:", err);
-      return res
-        .status(500)
-        .json({ message: "Erreur lors de la récupération du fournisseur" });
-    }
-    if (!row) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: "Fournisseur non trouvé" });
     }
-    res.status(200).json(row);
-  });
+
+    res.status(200).json(result.rows[0]);
+  } catch (err) {
+    console.error("Erreur lors de la récupération du fournisseur:", err);
+    res.status(500).json({ message: "Erreur lors de la récupération du fournisseur" });
+  }
 };
 
-// Mettre à jour un fournisseur
-exports.updateFournisseur = (req, res) => {
+// ✏️ Mettre à jour un fournisseur
+exports.updateFournisseur = async (req, res) => {
   const { id } = req.params;
   const { nom, email, telephone, adresse } = req.body;
 
-  const query = `UPDATE fournisseurs SET nom = ?, email = ?, telephone = ?, adresse = ? WHERE id = ?`;
+  try {
+    const result = await pool.query(
+      `
+      UPDATE fournisseurs
+      SET nom = $1, email = $2, telephone = $3, adresse = $4
+      WHERE id = $5
+      `,
+      [nom, email, telephone, adresse, id]
+    );
 
-  db.run(query, [nom, email, telephone, adresse, id], function (err) {
-    if (err) {
-      console.error("Erreur lors de la mise à jour du fournisseur:", err);
-      return res
-        .status(500)
-        .json({ message: "Erreur lors de la mise à jour du fournisseur" });
-    }
-    if (this.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: "Fournisseur non trouvé" });
     }
+
     res.status(200).json({ message: "Fournisseur mis à jour avec succès" });
-  });
+  } catch (err) {
+    console.error("Erreur lors de la mise à jour du fournisseur:", err);
+    res.status(500).json({ message: "Erreur lors de la mise à jour du fournisseur" });
+  }
 };
 
-// Supprimer un fournisseur
-exports.deleteFournisseur = (req, res) => {
+// 🗑️ Supprimer un fournisseur
+exports.deleteFournisseur = async (req, res) => {
   const { id } = req.params;
 
-  const query = `DELETE FROM fournisseurs WHERE id = ?`;
+  try {
+    const result = await pool.query(
+      `DELETE FROM fournisseurs WHERE id = $1`,
+      [id]
+    );
 
-  db.run(query, [id], function (err) {
-    if (err) {
-      console.error("Erreur lors de la suppression du fournisseur:", err);
-      return res
-        .status(500)
-        .json({ message: "Erreur lors de la suppression du fournisseur" });
-    }
-    if (this.changes === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ message: "Fournisseur non trouvé" });
     }
+
     res.status(200).json({ message: "Fournisseur supprimé avec succès" });
-  });
+  } catch (err) {
+    console.error("Erreur lors de la suppression du fournisseur:", err);
+    res.status(500).json({ message: "Erreur lors de la suppression du fournisseur" });
+  }
 };
