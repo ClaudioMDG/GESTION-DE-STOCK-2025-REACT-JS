@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Home, Box, FileText, Users, LogOut, ChevronDown, ChevronUp, UserPlus, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Logout from '../../components/logout';
+import Logout from '../../components/Logout';
 
 function Sidebar() {
   const [isClientsOpen, setIsClientsOpen] = useState(false);
