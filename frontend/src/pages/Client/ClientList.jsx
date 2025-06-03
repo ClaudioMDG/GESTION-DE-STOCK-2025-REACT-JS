@@ -13,6 +13,7 @@ import Sidebar from "../Layouts/Sidebar";
 import AlertBottomLeft from "../../components/AlertBottomLeft";
 import ClientAddModal from "./ClientAddModal";
 import ClientEditModal from "./ClientEditModal";
+import Header from "../Layouts/Header";
 
 function ClientList() {
   const [clients, setClients] = useState([]);
@@ -157,7 +158,9 @@ function ClientList() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen flex flex-col">
+    <Header />
+    <div className="flex flex-1">
       <div className="w-64">
         <Sidebar />
       </div>
@@ -305,6 +308,7 @@ function ClientList() {
         {alert && <AlertBottomLeft message={alert.message} type={alert.type} />}
       </div>
     </div>
+        </div>
   );
 }
 

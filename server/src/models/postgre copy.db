@@ -1,0 +1,109 @@
+BEGIN;
+
+-- Table : utilisateurs
+CREATE TABLE utilisateurs (
+    id SERIAL PRIMARY KEY,
+    nom TEXT UNIQUE,
+    email TEXT UNIQUE,
+    mot_de_passe TEXT,
+    role TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table : categories
+CREATE TABLE categories (
+    id SERIAL PRIMARY KEY,
+    nom TEXT UNIQUE,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table : clients
+CREATE TABLE clients (
+    id SERIAL PRIMARY KEY,
+    nom TEXT UNIQUE,
+    email TEXT UNIQUE,
+    telephone TEXT UNIQUE,
+    adresse TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table : fournisseurs
+CREATE TABLE fournisseurs (
+    id SERIAL PRIMARY KEY,
+    nom TEXT UNIQUE,
+    email TEXT UNIQUE,
+    telephone TEXT UNIQUE,
+    adresse TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Table : produits
+CREATE TABLE produits (
+    id SERIAL PRIMARY KEY,
+    nom TEXT,
+    description TEXT,
+    prix_achat NUMERIC,
+    prix_vente NUMERIC,
+    quantite_en_stock INTEGER,
+    seuil_alerte INTEGER,
+    categorie_id INTEGER REFERENCES categories(id),
+    fournisseur_id INTEGER REFERENCES fournisseurs(id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    image_path TEXT
+);
+
+-- Table : achats
+CREATE TABLE achats (
+    id SERIAL PRIMARY KEY,
+    fournisseur_id INTEGER REFERENCES fournisseurs(id),
+    date_achat TIMESTAMP,
+    total NUMERIC,
+    utilisateur_id INTEGER REFERENCES utilisateurs(id)
+);
+
+-- Table : achats_details
+CREATE TABLE achats_details (
+    id SERIAL PRIMARY KEY,
+    achat_id INTEGER REFERENCES achats(id),
+    produit_id INTEGER REFERENCES produits(id),
+    quantite INTEGER,
+    prix_unitaire NUMERIC,
+    total NUMERIC
+);
+
+-- Table : mouvements_stock
+CREATE TABLE mouvements_stock (
+    id SERIAL PRIMARY KEY,
+    produit_id INTEGER REFERENCES produits(id),
+    type TEXT,
+    quantite INTEGER,
+    date TIMESTAMP,
+    raison TEXT,
+    utilisateur_id INTEGER REFERENCES utilisateurs(id)
+);
+
+-- Table : ventes
+CREATE TABLE ventes (
+    id SERIAL PRIMARY KEY,
+    client_id INTEGER REFERENCES clients(id),
+    date_vente TIMESTAMP,
+    total NUMERIC,
+    utilisateur_id INTEGER REFERENCES utilisateurs(id)
+);
+
+-- Table : ventes_details
+CREATE TABLE ventes_details (
+    id SERIAL PRIMARY KEY,
+    vente_id INTEGER REFERENCES ventes(id),
+    produit_id INTEGER REFERENCES produits(id),
+    quantite INTEGER,
+    prix_unitaire NUMERIC,
+    total NUMERIC
+);
+
+-- Données d’exemple
+INSERT INTO utilisateurs (id, nom, email, mot_de_passe, role, created_at)
+VALUES (11, 'Claudio', 'ratovondriakakygo@gmail.com', '$2b$10$JMZCqYHkrGBGj35tBs3G2.cKkkuBx/ZKuwiW02ZLX3hAXP7I0nKGq', 'admin', '2025-05-23 16:56:56');
+
+COMMIT;

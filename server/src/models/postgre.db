@@ -1,0 +1,100 @@
+--
+-- Fichier généré par SQLiteStudio v3.2.1 sur mar. juin 3 18:47:30 2025
+--
+-- Encodage texte utilisé : System
+--
+PRAGMA foreign_keys = off;
+BEGIN TRANSACTION;
+
+-- Table : achats
+CREATE TABLE achats (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    fournisseur_id INTEGER,
+    date_achat DATETIME,
+    total REAL,
+    utilisateur_id INTEGER,
+    FOREIGN KEY (fournisseur_id) REFERENCES fournisseurs(id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+  );
+
+-- Table : achats_details
+CREATE TABLE achats_details (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    achat_id INTEGER,
+    produit_id INTEGER,
+    quantite INTEGER,
+    prix_unitaire REAL,
+    total REAL,
+    FOREIGN KEY (achat_id) REFERENCES achats(id),
+    FOREIGN KEY (produit_id) REFERENCES produits(id)
+  );
+
+-- Table : categories
+CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE, description TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+
+-- Table : clients
+CREATE TABLE clients (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE, email TEXT UNIQUE, telephone TEXT UNIQUE, adresse TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+-- Table : fournisseurs
+CREATE TABLE fournisseurs (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE, email TEXT UNIQUE, telephone TEXT UNIQUE, adresse TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+
+-- Table : mouvements_stock
+CREATE TABLE mouvements_stock (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    produit_id INTEGER,
+    type TEXT,
+    quantite INTEGER,
+    date DATETIME,
+    raison TEXT,
+    utilisateur_id INTEGER,
+    FOREIGN KEY (produit_id) REFERENCES produits(id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+  );
+
+-- Table : produits
+CREATE TABLE produits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nom TEXT,
+    description TEXT,
+    prix_achat REAL,
+    prix_vente REAL,
+    quantite_en_stock INTEGER,
+    seuil_alerte INTEGER,
+    categorie_id INTEGER,
+    fournisseur_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, image_path TEXT,
+    FOREIGN KEY (categorie_id) REFERENCES categories(id),
+    FOREIGN KEY (fournisseur_id) REFERENCES fournisseurs(id)
+  );
+
+-- Table : utilisateurs
+CREATE TABLE utilisateurs (id INTEGER PRIMARY KEY AUTOINCREMENT, nom TEXT UNIQUE, email TEXT UNIQUE, mot_de_passe TEXT, role TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP);
+INSERT INTO utilisateurs (id, nom, email, mot_de_passe, role, created_at) VALUES (11, 'Claudio', 'ratovondriakakygo@gmail.com', '$2b$10$JMZCqYHkrGBGj35tBs3G2.cKkkuBx/ZKuwiW02ZLX3hAXP7I0nKGq', 'admin', '2025-05-23 16:56:56');
+
+-- Table : ventes
+CREATE TABLE ventes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id INTEGER,
+    date_vente DATETIME,
+    total REAL,
+    utilisateur_id INTEGER,
+    FOREIGN KEY (client_id) REFERENCES clients(id),
+    FOREIGN KEY (utilisateur_id) REFERENCES utilisateurs(id)
+  );
+
+
+-- Table : ventes_details
+CREATE TABLE ventes_details (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    vente_id INTEGER,
+    produit_id INTEGER,
+    quantite INTEGER,
+    prix_unitaire REAL,
+    total REAL,
+    FOREIGN KEY (vente_id) REFERENCES ventes(id),
+    FOREIGN KEY (produit_id) REFERENCES produits(id)
+  );
+
+COMMIT TRANSACTION;
+PRAGMA foreign_keys = on;
