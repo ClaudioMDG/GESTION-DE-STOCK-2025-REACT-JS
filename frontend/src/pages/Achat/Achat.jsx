@@ -258,19 +258,19 @@ function Achat() {
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white border p-4 rounded-xl shadow text-center">
+          <div className="bg-white border p-4 rounded-xl  text-center">
             <p className="text-sm text-gray-500">Total achats</p>
             <p className="text-xl font-semibold">{filteredAchats.length}</p>
           </div>
-          <div className="bg-white border p-4 rounded-xl shadow text-center">
+          <div className="bg-white border p-4 rounded-xl  text-center">
             <p className="text-sm text-gray-500">Montant total</p>
             <p className="text-xl font-semibold">{totalMontant} Ar</p>
           </div>
-          <div className="bg-white border p-4 rounded-xl shadow text-center">
+          <div className="bg-white border p-4 rounded-xl  text-center">
             <p className="text-sm text-gray-500">Fournisseurs uniques</p>
             <p className="text-xl font-semibold">{uniqueFournisseurs}</p>
           </div>
-          <div className="bg-white border p-4 rounded-xl shadow text-center">
+          <div className="bg-white border p-4 rounded-xl  text-center">
             <p className="text-sm text-gray-500">Achats aujourd'hui</p>
             <p className="text-xl font-semibold">
               {
@@ -284,7 +284,7 @@ function Achat() {
           </div>
         </div>
 
-        <div className="bg-white border p-6 rounded-xl shadow mb-6 flex flex-wrap justify-between items-end gap-6">
+        <div className="bg-white border p-6 rounded-xl  mb-6 flex flex-wrap justify-between items-end gap-6">
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex flex-col">
               <label className="text-sm mb-1">Recherche fournisseur</label>
@@ -340,7 +340,7 @@ function Achat() {
           </div>
         </div>
 
-        <div className="bg-white border p-6 rounded-xl shadow">
+        <div className="bg-white border p-6 rounded-xl ">
           <table className="w-full text-sm">
             <thead className="bg-gray-100">
               <tr>
@@ -434,7 +434,7 @@ function Achat() {
 
         {selectedAchat && (
           <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center p-6 z-50">
-            <div className="bg-white rounded-xl shadow-lg max-w-xl w-full max-h-[80vh] overflow-auto p-6">
+            <div className="bg-white rounded-xl  max-w-xl w-full max-h-[80vh] overflow-auto p-6">
               <h3 className="text-xl font-semibold mb-4">
                 Détails de l'achat du{" "}
                 {new Date(selectedAchat.date_achat).toLocaleDateString()}

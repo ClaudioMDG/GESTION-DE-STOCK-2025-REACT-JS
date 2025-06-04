@@ -296,19 +296,19 @@ function Vente() {
 
         {/* Résumé Statistique */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white border border-gray-300 p-4 rounded-2xl shadow text-center">
+          <div className="bg-white border border-gray-300 p-4 rounded-2xl  text-center">
             <p className="text-sm text-gray-500">Total ventes</p>
             <p className="text-xl font-semibold">{filteredVentes.length}</p>
           </div>
-          <div className="bg-white border border-gray-300 p-4 rounded-2xl shadow text-center">
+          <div className="bg-white border border-gray-300 p-4 rounded-2xl  text-center">
             <p className="text-sm text-gray-500">Revenu total</p>
             <p className="text-xl font-semibold">{totalRevenue} Ar</p>
           </div>
-          <div className="bg-white border border-gray-300 p-4 rounded-2xl shadow text-center">
+          <div className="bg-white border border-gray-300 p-4 rounded-2xl  text-center">
             <p className="text-sm text-gray-500">Clients uniques</p>
             <p className="text-xl font-semibold">{uniqueClients}</p>
           </div>
-          <div className="bg-white border border-gray-300 p-4 rounded-2xl shadow text-center">
+          <div className="bg-white border border-gray-300 p-4 rounded-2xl  text-center">
             <p className="text-sm text-gray-500">Ventes aujourd'hui</p>
             <p className="text-xl font-semibold">
               {
@@ -325,7 +325,7 @@ function Vente() {
         </div>
 
         {/* Actions: Export + Ajouter vente */}
-        <div className="bg-white border border-gray-300 rounded-2xl shadow-sm p-6 mb-6 flex flex-wrap justify-between items-end gap-6">
+        <div className="bg-white border border-gray-300 rounded-2xl  p-6 mb-6 flex flex-wrap justify-between items-end gap-6">
           {/* Filtres */}
           <div className="flex flex-wrap gap-4 items-end">
             <div className="flex flex-col">
@@ -393,7 +393,7 @@ function Vente() {
         </div>
 
         {/* Table des ventes */}
-        <div className="bg-white border border-gray-300 rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-white border border-gray-300 rounded-2xl  p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-800">
               Historique des ventes
@@ -521,7 +521,7 @@ function Vente() {
         {/* Modal détails */}
         {selectedVente && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl w-11/12 md:w-2/3 lg:w-1/2 relative">
+            <div className="bg-white rounded-2xl  w-11/12 md:w-2/3 lg:w-1/2 relative">
               <button
                 onClick={closeDetails}
                 className="absolute top-4 right-4 bg-red-600 text-white rounded-full w-9 h-9 text-xl flex items-center justify-center hover:bg-red-700 transition"

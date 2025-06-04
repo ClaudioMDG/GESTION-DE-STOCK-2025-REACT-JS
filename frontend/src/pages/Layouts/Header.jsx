@@ -34,7 +34,7 @@ function Header() {
 
   return (
     <header
-      className="fixed top-0 left-64 right-0 h-16 bg-white shadow px-6 flex items-center justify-between z-10"
+      className="ml-64 top-0 left-64 right-0 h-16 bg-white shadow px-6 flex items-center justify-between z-10"
       role="banner"
       aria-label="Barre de navigation principale"
     >

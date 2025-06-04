@@ -206,7 +206,7 @@ function Dashboard() {
         {/* Grille 2 colonnes pour graphiques */}
         <section className="mb-10 grid md:grid-cols-2 gap-6 ">
           {/* 1. Evolution des ventes et achats */}
-          <div className="bg-white p-4 rounded-lg shadow-md h-[250px] flex flex-col border border-gray-200">
+          <div className="bg-white p-4 rounded-lg -md h-[250px] flex flex-col border border-gray-200">
             <h2 className="text-xl font-semibold mb-4">
               Évolution des ventes et achats ({period})
             </h2>
@@ -250,7 +250,7 @@ function Dashboard() {
           </div>
 
           {/* 2. Ventes et achats par catégorie */}
-          <div className="bg-white p-4 rounded-lg shadow-md h-[250px] flex flex-col border border-gray-200">
+          <div className="bg-white p-4 rounded-lg -md h-[250px] flex flex-col border border-gray-200">
             <h2 className="text-xl font-semibold mb-4">
               Ventes et achats par catégorie
             </h2>
@@ -282,7 +282,7 @@ function Dashboard() {
           </div>
 
           {/* 3. Top produits vendus */}
-          <div className="bg-white p-4 rounded-lg shadow-md h-[250px] flex flex-col border border-gray-200">
+          <div className="bg-white p-4 rounded-lg -md h-[250px] flex flex-col border border-gray-200">
             <h2 className="text-xl font-semibold mb-4">Top produits vendus</h2>
             <div className="flex-1">
               <Bar
@@ -307,7 +307,7 @@ function Dashboard() {
           </div>
 
           {/* 4. Top produits achetés */}
-          <div className="bg-white p-4 rounded-lg shadow-md h-[250px] flex flex-col border border-gray-200">
+          <div className="bg-white p-4 rounded-lg -md h-[250px] flex flex-col border border-gray-200">
             <h2 className="text-xl font-semibold mb-4">Top produits achetés</h2>
             <div className="flex-1">
               <Bar
@@ -332,7 +332,7 @@ function Dashboard() {
           </div>
 
           {/* 5. Marges bénéficiaires par produit */}
-          <div className="bg-white p-4 rounded-lg shadow-md h-[250px] flex flex-col border border-gray-200">
+          <div className="bg-white p-4 rounded-lg -md h-[250px] flex flex-col border border-gray-200">
             <h2 className="text-xl font-semibold mb-4">
               Marges bénéficiaires par produit
             </h2>

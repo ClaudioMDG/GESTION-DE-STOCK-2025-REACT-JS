@@ -1,3 +1,14 @@
+const { Pool } = require('pg');
+
+const db = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'gstock',
+  password: 'votre_mot_de_passe',
+  port: 6042,
+});
+
+module.exports = db;
 // const sqlite3 = require('sqlite3').verbose();
 
 // // Connexion à la base de données
@@ -10,16 +21,3 @@
 // });
 
 // module.exports = db;
-
-
-const { Pool } = require('pg');
-
-const db = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'gstock',
-  password: 'votre_mot_de_passe',
-  port: 6042,
-});
-
-module.exports = db;
