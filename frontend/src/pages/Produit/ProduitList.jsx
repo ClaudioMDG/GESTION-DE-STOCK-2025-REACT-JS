@@ -11,6 +11,7 @@ import {
   Tag,
   Truck,
   AlertTriangle,
+  Info,
 } from "lucide-react";
 import Sidebar from "../Layouts/Sidebar";
 import AlertBottomLeft from "../../components/AlertBottomLeft";
@@ -19,6 +20,7 @@ import ProduitEditModal from "./ProduitEditModal";
 import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import ProduitDetailModal from "./ProduitDetailModal"; // Ajoutez ceci
 
 function ProduitList() {
   const [produits, setProduits] = useState([]);
@@ -38,6 +40,9 @@ function ProduitList() {
   const [categorieFiltre, setCategorieFiltre] = useState("");
   const [fournisseurFiltre, setFournisseurFiltre] = useState("");
   const [seuilFiltre, setSeuilFiltre] = useState(""); // "haut", "bas", ou ""
+
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [produitDetail, setProduitDetail] = useState(null);
 
   const indexOfLast = currentPage * produitsParPage;
   const indexOfFirst = indexOfLast - produitsParPage;
@@ -74,23 +79,23 @@ function ProduitList() {
     const today = now.toISOString().split("T")[0]; // yyyy-mm-dd
     const alertsKey = "alertsShown_" + today;
     const alerts = JSON.parse(localStorage.getItem(alertsKey)) || [];
-  
+
     if (alerts.length < 2) {
       const produitsAlerte = produits.filter(
         (p) => p.quantite_en_stock < p.seuil_alerte
       );
-  
+
       if (produitsAlerte.length > 0) {
         // Afficher l'alerte
         setAlert({
           message: `${produitsAlerte.length} produit(s) en-dessous du seuil d'alerte.`,
           type: "warning",
         });
-  
+
         // Enregistrer l'heure de cette alerte
         alerts.push(now.toISOString());
         localStorage.setItem(alertsKey, JSON.stringify(alerts));
-  
+
         // Supprimer l'alerte après quelques secondes
         setTimeout(() => {
           setAlert(null);
@@ -98,7 +103,7 @@ function ProduitList() {
       }
     }
   }, [produits]);
-  
+
   const filtrerEtTrier = () => {
     let filtrés = produits.filter((p) => {
       const matchNom = p.nom.toLowerCase().includes(search.toLowerCase());
@@ -278,29 +283,29 @@ function ProduitList() {
   };
   const exportSinglePDF = (produit) => {
     const doc = new jsPDF();
-  
+
     const exportDate = new Date().toLocaleDateString("fr-FR", {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
-      minute: "2-digit"
+      minute: "2-digit",
     });
-  
+
     // Titre
     doc.setFontSize(16);
     doc.setTextColor("#1565c0");
     doc.text(`Détails du produit : ${produit.nom}`, 14, 20);
-  
+
     // Date d’exportation
     doc.setFontSize(11);
     doc.setTextColor("#555");
     doc.text(`Exporté le : ${exportDate}`, 14, 27);
-  
+
     // Détails du produit
     doc.setFontSize(12);
     doc.setTextColor("#000");
-  
+
     const details = [
       ["Nom", produit.nom],
       ["Description", produit.description],
@@ -311,7 +316,7 @@ function ProduitList() {
       ["Catégorie", getCategorieName(produit.categorie_id)],
       ["Fournisseur", getFournisseurName(produit.fournisseur_id)],
     ];
-  
+
     // Générer le tableau avec autoTable
     autoTable(doc, {
       startY: 35,
@@ -321,11 +326,10 @@ function ProduitList() {
       headStyles: { fillColor: [33, 150, 243] },
       theme: "grid",
     });
-  
+
     // Sauvegarder le PDF
     doc.save(`produit_${produit.nom}.pdf`);
   };
-  
 
   return (
     <div className="flex min-h-screen">
@@ -546,6 +550,17 @@ function ProduitList() {
                           <Trash2 size={18} />
                         </button>
                         <button
+                          onClick={() => {
+                            setProduitDetail(produit);
+                            setDetailModalOpen(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-800"
+                          title="Plus d'infos"
+                        >
+                          <Info size={18} />
+                        </button>
+
+                        <button
                           onClick={() => exportSinglePDF(produit)}
                           className="text-green-600 hover:text-green-800"
                           title="Exporter ce produit en PDF"
@@ -589,6 +604,11 @@ function ProduitList() {
             onSuccess={handleEditSuccess}
             categories={categories}
             fournisseurs={fournisseurs}
+          />
+          <ProduitDetailModal
+            isOpen={detailModalOpen}
+            onClose={() => setDetailModalOpen(false)}
+            produit={produitDetail}
           />
         </div>
         {alert && <AlertBottomLeft message={alert.message} type={alert.type} />}
