@@ -50,14 +50,38 @@ exports.addProduit = async (req, res) => {
     seuil_alerte,
     categorie_id,
     fournisseur_id,
+    code_barre,
+    date_expiration,
+    emplacement_stock,
+    poids,
+    unite_mesure,
+    est_actif,
   } = req.body;
 
   const image_path = req.file ? "/images/" + req.file.filename : null;
 
   const query = `
-    INSERT INTO produits
-    (nom, description, prix_achat, prix_vente, quantite_en_stock, seuil_alerte, categorie_id, fournisseur_id, image_path)
-    VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
+    INSERT INTO produits (
+      nom,
+      description,
+      prix_achat,
+      prix_vente,
+      quantite_en_stock,
+      seuil_alerte,
+      categorie_id,
+      fournisseur_id,
+      code_barre,
+      date_expiration,
+      emplacement_stock,
+      poids,
+      unite_mesure,
+      est_actif,
+      image_path
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6, $7, $8,
+      $9, $10, $11, $12, $13, $14, $15
+    )
     RETURNING id
   `;
 
@@ -70,6 +94,12 @@ exports.addProduit = async (req, res) => {
     seuil_alerte,
     categorie_id,
     fournisseur_id,
+    code_barre || '', // par défaut si absent
+    date_expiration || new Date(), // par défaut aujourd'hui
+    emplacement_stock || '',
+    poids || 0,
+    unite_mesure || 'unité',
+    est_actif === false ? false : true, // true par défaut
     image_path,
   ];
 

@@ -50,7 +50,15 @@ CREATE TABLE produits (
     categorie_id INTEGER REFERENCES categories(id),
     fournisseur_id INTEGER REFERENCES fournisseurs(id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    image_path TEXT
+    image_path TEXT,
+
+    -- Champs ajoutés avec contraintes NOT NULL
+    code_barre TEXT NOT NULL DEFAULT '',
+    date_expiration DATE NOT NULL DEFAULT CURRENT_DATE,
+    emplacement_stock TEXT NOT NULL DEFAULT '',
+    poids NUMERIC NOT NULL DEFAULT 0,
+    unite_mesure TEXT NOT NULL DEFAULT 'unité',
+    est_actif BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Table : achats
