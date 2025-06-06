@@ -13,6 +13,7 @@ import {
   AlertTriangle,
   Info,
 } from "lucide-react";
+import * as Tooltip from "@radix-ui/react-tooltip";
 import Sidebar from "../Layouts/Sidebar";
 import AlertBottomLeft from "../../components/AlertBottomLeft";
 import ProduitAddModal from "./ProduitAddModal";
@@ -43,6 +44,8 @@ function ProduitList() {
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [produitDetail, setProduitDetail] = useState(null);
+
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const indexOfLast = currentPage * produitsParPage;
   const indexOfFirst = indexOfLast - produitsParPage;
@@ -330,6 +333,21 @@ function ProduitList() {
     // Sauvegarder le PDF
     doc.save(`produit_${produit.nom}.pdf`);
   };
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectAll = () => {
+    const currentIds = currentProduits.map((p) => p.id);
+    const allSelected = currentIds.every((id) => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !currentIds.includes(id)));
+    } else {
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...currentIds])));
+    }
+  };
 
   return (
     <div className="flex min-h-screen">
@@ -460,14 +478,50 @@ function ProduitList() {
               </select>
             </div>
           </div>
+          {selectedIds.length > 0 && (
+            <div className="mb-4 text-sm text-blue-700 bg-blue-100 p-3 rounded flex justify-between items-center">
+              <span>{selectedIds.length} produit(s) sélectionné(s)</span>
+              <div className="flex gap-2">
+                <th className="px-4 py-2">
+                  <input
+                    type="checkbox"
+                    checked={currentProduits.every((p) =>
+                      selectedIds.includes(p.id)
+                    )}
+                    onChange={handleSelectAll}
+                  />
+                  Tout selectionner
+                </th>
+                <button
+                  onClick={() => {
+                    // Exemple d'action groupée
+                    selectedIds.forEach((id) => handleDelete(id));
+                    setSelectedIds([]);
+                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                >
+                  Supprimer sélection
+                </button>
+                <button
+                  onClick={() => {
+                    selectedIds.forEach((id) => {
+                      const p = produits.find((pr) => pr.id === id);
+                      if (p) exportSinglePDF(p);
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded"
+                >
+                  Exporter PDF
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-4 py-2 text-sm">Image</th>
                   {[
-                    "nom",
                     "description",
                     "prix_achat",
                     "prix_vente",
@@ -487,8 +541,10 @@ function ProduitList() {
                   <th className="px-4 py-2 text-sm">Catégorie</th>
                   <th className="px-4 py-2 text-sm">Fournisseur</th>
                   <th className="px-4 py-2 text-sm text-center">Actions</th>
+                  <th className="px-4 py-2 text-sm text-center"> </th>
                 </tr>
               </thead>
+
               <tbody>
                 {currentProduits.map((produit) => (
                   <tr
@@ -499,75 +555,105 @@ function ProduitList() {
                         : "hover:bg-gray-50"
                     }`}
                   >
-                    <td className="px-4 py-2">
-                      {produit.image_path ? (
-                        <img
-                          src={`${URL}${produit.image_path}`}
-                          alt={produit.nom}
-                          className="w-16 h-16 object-cover rounded"
-                          onError={(e) => {
-                            if (!e.target.src.includes("placeholder.png")) {
-                              e.target.onerror = null;
-                              e.target.src = "/placeholder.png";
-                            }
-                          }}
-                        />
-                      ) : (
-                        <div className="w-16 h-16 bg-gray-200 flex items-center justify-center text-gray-400 text-xs rounded">
-                          Pas d'image
-                        </div>
-                      )}
-                    </td>
-                    {console.log(produit.image_path)}
-
-                    <td className="px-4 py-2">{produit.nom}</td>
-                    <td className="px-4 py-2">{produit.description}</td>
-                    <td className="px-4 py-2">{produit.prix_achat} Ar</td>
-                    <td className="px-4 py-2">{produit.prix_vente} Ar</td>
-                    <td className="px-4 py-2">{produit.quantite_en_stock}</td>
-                    <td className="px-4 py-2">{produit.seuil_alerte}</td>
-                    <td className="px-4 py-2">
+                    
+                    <td className="px-4 py-2 text-center">{produit.nom}</td>
+                    <td className="px-4 py-2 text-center">{produit.description}</td>
+                    <td className="px-4 py-2 text-center">{produit.prix_achat} Ar</td>
+                    <td className="px-4 py-2 text-center">{produit.prix_vente} Ar</td>
+                    <td className="px-4 py-2 text-center">{produit.quantite_en_stock}</td>
+                    <td className="px-4 py-2 text-center">{produit.seuil_alerte}</td>
+                    <td className="px-4 py-2 text-center">
                       {getCategorieName(produit.categorie_id)}
                     </td>
-                    <td className="px-4 py-2">
+                    <td className="px-4 py-2 text-center">
                       {getFournisseurName(produit.fournisseur_id)}
                     </td>
                     <td className="px-4 py-2 text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedProduit(produit);
-                            setEditModalOpen(true);
-                          }}
-                          className="text-yellow-600 hover:text-yellow-800"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(produit.id)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setProduitDetail(produit);
-                            setDetailModalOpen(true);
-                          }}
-                          className="text-blue-600 hover:text-blue-800"
-                          title="Plus d'infos"
-                        >
-                          <Info size={18} />
-                        </button>
+                      <div className="flex justify-center items-center gap-3">
+                        <Tooltip.Provider>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button
+                                onClick={() => {
+                                  setSelectedProduit(produit);
+                                  setEditModalOpen(true);
+                                }}
+                                className="text-yellow-600 hover:text-yellow-800"
+                              >
+                                <Edit size={18} />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              side="top"
+                              className="bg-black text-white text-xs px-2 py-1 rounded shadow-md"
+                            >
+                              Modifier
+                            </Tooltip.Content>
+                          </Tooltip.Root>
 
-                        <button
-                          onClick={() => exportSinglePDF(produit)}
-                          className="text-green-600 hover:text-green-800"
-                          title="Exporter ce produit en PDF"
-                        >
-                          <FileDown size={18} />
-                        </button>
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button
+                                onClick={() => handleDelete(produit.id)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              side="top"
+                              className="bg-black text-white text-xs px-2 py-1 rounded shadow-md"
+                            >
+                              Supprimer
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button
+                                onClick={() => {
+                                  setProduitDetail(produit);
+                                  setDetailModalOpen(true);
+                                }}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <Info size={18} />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              side="top"
+                              className="bg-black text-white text-xs px-2 py-1 rounded shadow-md"
+                            >
+                              Détails
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+
+                          <Tooltip.Root>
+                            <Tooltip.Trigger asChild>
+                              <button
+                                onClick={() => exportSinglePDF(produit)}
+                                className="text-green-600 hover:text-green-800"
+                              >
+                                <FileDown size={18} />
+                              </button>
+                            </Tooltip.Trigger>
+                            <Tooltip.Content
+                              side="top"
+                              className="bg-black text-white text-xs px-2 py-1 rounded shadow-md"
+                            >
+                              Exporter en PDF
+                            </Tooltip.Content>
+                          </Tooltip.Root>
+                        </Tooltip.Provider>
                       </div>
+                      
+                    </td>
+                    <td className="">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(produit.id)}
+                        onChange={() => handleCheckboxChange(produit.id)}
+                      />
                     </td>
                   </tr>
                 ))}
